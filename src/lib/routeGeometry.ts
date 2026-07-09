@@ -5,12 +5,15 @@ interface LatLng {
   lng: number;
 }
 
-const CACHE_PREFIX = "trail-conditions:route-geometry:v1:";
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
-const PAD_DEG = 0.01; // ~1.1km padding around each leg's bounding box
-const SNAP_TOLERANCE_M = 350; // stitched path must land within this of the named waypoint
-const JUMP_TOLERANCE_M = 80; // max gap bridged between two way endpoints while stitching
-const MAX_LENGTH_RATIO = 4; // reject a stitch that wanders more than 4x the straight-line distance
+const CACHE_PREFIX = "trail-conditions:route-geometry:v2:";
+// BRouter is a free, no-key routing engine with real hiking profiles. Unlike
+// hand-stitching raw OSM ways, it snaps to the actual trail network and
+// returns a routed path that follows the marked trail between each pair of
+// named waypoints. Public instance — degrade gracefully if it's unreachable.
+const BROUTER_URL = "https://brouter.de/brouter";
+const BROUTER_PROFILE = "hiking-beta";
+const SNAP_TOLERANCE_M = 400; // routed path must start/end within this of the named waypoint
+const MAX_LENGTH_RATIO = 6; // reject a route that wanders more than 6x the straight-line distance
 const FETCH_TIMEOUT_MS = 9000;
 
 function haversineM(a: LatLng, b: LatLng): number {
@@ -24,74 +27,44 @@ function haversineM(a: LatLng, b: LatLng): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+function pathLengthM(points: LatLng[]): number {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) total += haversineM(points[i - 1], points[i]);
+  return total;
+}
+
 /**
- * Real trail segments near Mont Blanc's alpine terrain aren't bundled into a
- * single OSM "route" relation (the upper mountain isn't a marked hiking
- * trail in that sense) — but the individual path/via-ferrata/track ways
- * *are* mapped. We fetch the raw ways in a small window around each leg and
- * stitch them ourselves.
+ * Route a single leg between two named waypoints via BRouter's hiking
+ * profile. The result is validated against the straight-line distance so an
+ * occasional wild detour (missing trail data) falls back to a straight leg
+ * rather than drawing nonsense.
  */
-async function fetchWaysNear(a: LatLng, b: LatLng): Promise<LatLng[][]> {
-  const south = Math.min(a.lat, b.lat) - PAD_DEG;
-  const north = Math.max(a.lat, b.lat) + PAD_DEG;
-  const west = Math.min(a.lng, b.lng) - PAD_DEG;
-  const east = Math.max(a.lng, b.lng) + PAD_DEG;
-  const query = `[out:json][timeout:20];way["highway"~"^(path|track|via_ferrata|steps|footway)$"](${south},${west},${north},${east});out geom;`;
-
-  const res = await fetch(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`, {
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
-  if (!res.ok) throw new Error(`Overpass request failed: ${res.status}`);
-  const data = await res.json();
-
-  return (data.elements ?? [])
-    .filter((el: { type: string; geometry?: unknown }) => el.type === "way" && Array.isArray(el.geometry))
-    .map((el: { geometry: { lat: number; lon: number }[] }) => el.geometry.map((g) => ({ lat: g.lat, lng: g.lon })));
-}
-
-/** Greedy nearest-endpoint chaining from `start` toward `end`. */
-function stitch(ways: LatLng[][], start: LatLng, end: LatLng): LatLng[] | null {
-  const remaining = ways.map((points) => ({ points, used: false }));
-  const path: LatLng[] = [start];
-  let current = start;
-  let hops = 0;
-
-  while (haversineM(current, end) > SNAP_TOLERANCE_M && hops < 60) {
-    let best: { way: (typeof remaining)[number]; reversed: boolean; dist: number } | null = null;
-    for (const way of remaining) {
-      if (way.used || way.points.length < 2) continue;
-      const first = way.points[0];
-      const last = way.points[way.points.length - 1];
-      const dFirst = haversineM(current, first);
-      const dLast = haversineM(current, last);
-      if (dFirst < JUMP_TOLERANCE_M && (!best || dFirst < best.dist)) best = { way, reversed: false, dist: dFirst };
-      if (dLast < JUMP_TOLERANCE_M && (!best || dLast < best.dist)) best = { way, reversed: true, dist: dLast };
-    }
-    if (!best) break;
-    best.way.used = true;
-    const pts = best.reversed ? [...best.way.points].reverse() : best.way.points;
-    path.push(...pts.slice(1));
-    current = pts[pts.length - 1];
-    hops += 1;
-  }
-
-  if (haversineM(current, end) > SNAP_TOLERANCE_M) return null;
-  path.push(end);
-
-  const straightLineDist = haversineM(start, end);
-  let pathLength = 0;
-  for (let i = 1; i < path.length; i++) pathLength += haversineM(path[i - 1], path[i]);
-  if (straightLineDist > 50 && pathLength > straightLineDist * MAX_LENGTH_RATIO) return null;
-
-  return path;
-}
-
 async function fetchLeg(a: LatLng, b: LatLng): Promise<LatLng[]> {
   try {
-    const ways = await fetchWaysNear(a, b);
-    return stitch(ways, a, b) ?? [a, b];
+    const lonlats = `${a.lng},${a.lat}|${b.lng},${b.lat}`;
+    const url = `${BROUTER_URL}?lonlats=${encodeURIComponent(lonlats)}&profile=${BROUTER_PROFILE}&alternativeidx=0&format=geojson`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+    if (!res.ok) throw new Error(`BRouter request failed: ${res.status}`);
+    const data = await res.json();
+
+    const coords: [number, number, number?][] | undefined = data?.features?.[0]?.geometry?.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) throw new Error("BRouter returned no geometry");
+
+    const routed: LatLng[] = coords.map(([lng, lat]) => ({ lat, lng }));
+
+    // Sanity: the routed path must actually connect near both endpoints, and
+    // not wander wildly further than a straight line would.
+    if (haversineM(routed[0], a) > SNAP_TOLERANCE_M) throw new Error("route does not start at waypoint");
+    if (haversineM(routed[routed.length - 1], b) > SNAP_TOLERANCE_M) throw new Error("route does not reach waypoint");
+    const straight = haversineM(a, b);
+    if (straight > 50 && pathLengthM(routed) > straight * MAX_LENGTH_RATIO) throw new Error("route wanders too far");
+
+    // Anchor the drawn line exactly on the named markers.
+    routed[0] = a;
+    routed[routed.length - 1] = b;
+    return routed;
   } catch {
-    return [a, b]; // Overpass unreachable/slow/empty — fall back to a straight leg.
+    return [a, b]; // BRouter unreachable/slow/empty/implausible — fall back to a straight leg.
   }
 }
 
@@ -117,10 +90,10 @@ function writeCache(waypoints: Waypoint[], path: [number, number][]) {
 }
 
 /**
- * Real, OSM-traced trail geometry, fetched and stitched leg-by-leg between
- * the named waypoints. Falls back to a straight line for any leg the live
- * data doesn't support — the map is never worse than a straight polyline,
- * only potentially better.
+ * Real, trail-following geometry, routed leg-by-leg between the named
+ * waypoints with BRouter's hiking profile. Falls back to a straight line for
+ * any leg the router can't support — the map is never worse than a straight
+ * polyline, only potentially better.
  */
 export async function fetchTrailGeometry(waypoints: Waypoint[]): Promise<[number, number][]> {
   const cached = readCache(waypoints);
@@ -138,6 +111,12 @@ export async function fetchTrailGeometry(waypoints: Waypoint[]): Promise<[number
   for (const leg of legs) fullPath.push(...leg.slice(1));
 
   const result: [number, number][] = fullPath.map((p) => [p.lat, p.lng]);
-  writeCache(waypoints, result);
+
+  // Only cache a genuinely routed path — if every leg fell back to a straight
+  // line (e.g. offline first load), don't freeze that in so a later load can
+  // still upgrade to the real trail.
+  const isAllStraight = result.length <= waypoints.length;
+  if (!isAllStraight) writeCache(waypoints, result);
+
   return result;
 }

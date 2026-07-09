@@ -2,3 +2,7 @@ node_modules
 dist
 .DS_Store
 *.local
+*.tsbuildinfo
+trail-screenshot.png
+route-*.png
+verify-*.mjs

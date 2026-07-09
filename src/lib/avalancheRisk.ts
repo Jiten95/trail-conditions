@@ -1,6 +1,9 @@
 import type { WeatherReading } from "../types";
 
-export type AvalancheRiskLevel = "low" | "moderate" | "high" | "unavailable";
+// Full EAWS 5-level scale so we can render an official SLF bulletin faithfully
+// (see slfAvalanche.ts). The weather-derived heuristic below only ever emits
+// low/moderate/high — the extra levels exist for the official source.
+export type AvalancheRiskLevel = "low" | "moderate" | "considerable" | "high" | "very-high" | "unavailable";
 
 export interface AvalancheRiskEstimate {
   level: AvalancheRiskLevel;

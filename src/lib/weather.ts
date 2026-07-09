@@ -22,7 +22,7 @@ export async function fetchWeather(waypoint: Waypoint): Promise<WeatherReading> 
     "current",
     "temperature_2m,precipitation,rain,showers,snowfall,wind_speed_10m,wind_gusts_10m,weather_code",
   );
-  url.searchParams.set("daily", "snowfall_sum");
+  url.searchParams.set("daily", "snowfall_sum,sunrise,sunset,daylight_duration");
   url.searchParams.set("past_days", "1");
   url.searchParams.set("forecast_days", "1");
   url.searchParams.set("wind_speed_unit", "kmh");
@@ -37,6 +37,14 @@ export async function fetchWeather(waypoint: Waypoint): Promise<WeatherReading> 
   const dailySnowfall: (number | null)[] = data.daily?.snowfall_sum ?? [];
   const recentSnowfallCm = dailySnowfall.reduce((sum: number, v) => sum + (v ?? 0), 0);
 
+  // With past_days=1 + forecast_days=1 the daily arrays hold [yesterday, today];
+  // the last entry is today, which is what we want for sun times.
+  const dailyTimes: string[] = data.daily?.time ?? [];
+  const todayIdx = dailyTimes.length > 0 ? dailyTimes.length - 1 : -1;
+  const sunrises: (string | null)[] = data.daily?.sunrise ?? [];
+  const sunsets: (string | null)[] = data.daily?.sunset ?? [];
+  const daylights: (number | null)[] = data.daily?.daylight_duration ?? [];
+
   return {
     waypointId: waypoint.id,
     fetchedAt: new Date().toISOString(),
@@ -49,6 +57,10 @@ export async function fetchWeather(waypoint: Waypoint): Promise<WeatherReading> 
     windGustsKph: current.wind_gusts_10m,
     weatherCode: current.weather_code,
     recentSnowfallCm,
+    sunrise: todayIdx >= 0 ? (sunrises[todayIdx] ?? null) : null,
+    sunset: todayIdx >= 0 ? (sunsets[todayIdx] ?? null) : null,
+    daylightSeconds: todayIdx >= 0 ? (daylights[todayIdx] ?? null) : null,
+    localTime: current.time ?? null,
     source: "weather",
   };
 }
