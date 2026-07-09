@@ -2,16 +2,17 @@ import type { RangerAdvisory } from "../types";
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
 
-// Seeded ranger / advisory-center feed — simulates a park ranger or avalanche
-// center bulletin. Illustrative only; not a live integration (see README).
+// Seeded ranger / guide-office advisory feed — simulates a bulletin from a
+// body like the Compagnie des Guides or the local high-mountain gendarmerie.
+// Illustrative only; not a live integration (see README).
 export const seedRangerAdvisories: RangerAdvisory[] = [
   {
     id: "ra-1",
     waypointId: "wp-4",
     type: "rockfall",
-    severity: "medium",
-    message: "Rangers noted loose rock on the upper switchbacks after recent freeze-thaw cycles.",
-    issuedAt: hoursAgo(14),
+    severity: "high",
+    message: "Guide office advisory: rockfall risk elevated in the Grand Couloir after overnight freeze-thaw — cross quickly, do not stop.",
+    issuedAt: hoursAgo(4),
     source: "ranger",
   },
   {
@@ -19,7 +20,7 @@ export const seedRangerAdvisories: RangerAdvisory[] = [
     waypointId: "wp-6",
     type: "high-wind",
     severity: "high",
-    message: "Chains section advisory: sustained winds above 40 mph reported, exposed hikers should use caution.",
+    message: "Sustained winds above 60 km/h forecast near the Dome du Gouter; summit pushes advised to turn back if unable to shelter.",
     issuedAt: hoursAgo(4),
     source: "ranger",
   },
@@ -28,7 +29,7 @@ export const seedRangerAdvisories: RangerAdvisory[] = [
     waypointId: "wp-3",
     type: "ice",
     severity: "low",
-    message: "Shaded sections of Refrigerator Canyon may retain ice into midday this week.",
+    message: "Verglas persists on the traverse below Tete Rousse in early morning shade.",
     issuedAt: hoursAgo(40),
     source: "ranger",
   },
@@ -37,7 +38,7 @@ export const seedRangerAdvisories: RangerAdvisory[] = [
     waypointId: "wp-7",
     type: "lightning",
     severity: "high",
-    message: "Afternoon thunderstorm risk at the summit; rangers recommend turning back before midday if skies darken.",
+    message: "Afternoon thunderstorm risk on the summit ridge; guide office recommends turning back before midday if skies darken.",
     issuedAt: hoursAgo(1),
     source: "ranger",
   },

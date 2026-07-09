@@ -1,16 +1,17 @@
 import type { Waypoint } from "../types";
 
-// Approximate waypoints along the Angels Landing Trail, Zion National Park, UT.
-// Coordinates are illustrative (traced from the trail's general path), not
-// surveyed GPS data — see README for scope notes.
-export const ROUTE_NAME = "Angels Landing Trail, Zion National Park";
+// Approximate waypoints along the Gouter Route (Voie Normale) up Mont Blanc —
+// the mountain's standard and most-climbed ascent line. Coordinates are
+// illustrative (traced from the route's general path), not surveyed GPS
+// data — see README for scope notes.
+export const ROUTE_NAME = "Gouter Route (Voie Normale), Mont Blanc";
 
 export const waypoints: Waypoint[] = [
-  { id: "wp-1", name: "The Grotto Trailhead", order: 1, lat: 37.2937, lng: -112.9482 },
-  { id: "wp-2", name: "Virgin River Footbridge", order: 2, lat: 37.2951, lng: -112.9497 },
-  { id: "wp-3", name: "Refrigerator Canyon", order: 3, lat: 37.297, lng: -112.952 },
-  { id: "wp-4", name: "Walter's Wiggles", order: 4, lat: 37.2989, lng: -112.9536 },
-  { id: "wp-5", name: "Scout Lookout", order: 5, lat: 37.2995, lng: -112.9549 },
-  { id: "wp-6", name: "Chains Section", order: 6, lat: 37.3005, lng: -112.9558 },
-  { id: "wp-7", name: "Angels Landing Summit", order: 7, lat: 37.3016, lng: -112.9569 },
+  { id: "wp-1", name: "Les Houches Trailhead", order: 1, lat: 45.8917, lng: 6.7997 },
+  { id: "wp-2", name: "Bellevue Cable Car Station", order: 2, lat: 45.908, lng: 6.7735 },
+  { id: "wp-3", name: "Refuge de Tete Rousse", order: 3, lat: 45.8567, lng: 6.8386 },
+  { id: "wp-4", name: "Grand Couloir Crossing", order: 4, lat: 45.8574, lng: 6.8432 },
+  { id: "wp-5", name: "Refuge du Gouter", order: 5, lat: 45.8581, lng: 6.8478 },
+  { id: "wp-6", name: "Dome du Gouter", order: 6, lat: 45.8558, lng: 6.858 },
+  { id: "wp-7", name: "Mont Blanc Summit", order: 7, lat: 45.8326, lng: 6.8652 },
 ];

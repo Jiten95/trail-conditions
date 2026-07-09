@@ -5,8 +5,10 @@ signal (live weather, crowd-submitted reports, and a ranger/advisory feed),
 combined into a single, explainable status per waypoint — with a visible
 confidence score and a one-line "why," never a black box.
 
-Route used for the demo: **Angels Landing Trail, Zion National Park** (7
-waypoints, trailhead to summit).
+Route used for the demo: **Gouter Route (Voie Normale), Mont Blanc** — the
+mountain's standard and most-climbed ascent line (7 waypoints, Les Houches
+trailhead to the summit, including the Grand Couloir — the route's single
+most notorious rockfall hazard).
 
 ## What's live vs. seeded — please read this before judging
 

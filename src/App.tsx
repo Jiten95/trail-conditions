@@ -10,7 +10,7 @@ import type { ReconciledWaypoint } from "./types";
 import { STATUS_META } from "./lib/statusMeta";
 
 function AppContent() {
-  const [selectedId, setSelectedId] = useState<string | null>(waypoints[0].id);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const weatherState = useWeather(waypoints);
   const { reports } = useReports();
 
@@ -57,13 +57,16 @@ function AppContent() {
         <div className="map-pane">
           <MapView waypoints={waypoints} reconciled={reconciled} selectedId={selectedId} onSelect={setSelectedId} />
         </div>
-        <div className={`detail-pane${selectedWaypoint ? "" : " empty"}`}>
-          {selectedWaypoint ? (
+        {!selectedWaypoint && <div className="map-hint">Tap a marker to view conditions or submit a report</div>}
+        {selectedWaypoint && (
+          <div className="detail-overlay" role="dialog" aria-label={`${selectedWaypoint.name} details`}>
+            <div className="detail-overlay-handle" />
+            <button className="detail-close" onClick={() => setSelectedId(null)} aria-label="Close">
+              ×
+            </button>
             <WaypointDetail waypoint={selectedWaypoint} result={selectedResult} />
-          ) : (
-            "Select a waypoint on the map to see its reconciled status."
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
