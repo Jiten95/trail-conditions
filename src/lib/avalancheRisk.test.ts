@@ -43,4 +43,19 @@ describe("estimateAvalancheRisk", () => {
     const result = estimateAvalancheRisk(baseWeather({ recentSnowfallCm: 1, temperatureC: -10 }));
     expect(result.level).toBe("low");
   });
+
+  it("ignores wind when there is no snow available to transport", () => {
+    const result = estimateAvalancheRisk(baseWeather({ recentSnowfallCm: 0, windGustsKph: 80 }));
+    expect(result.level).toBe("low");
+  });
+
+  it("escalates to high with new snow plus rain-on-snow warming", () => {
+    const result = estimateAvalancheRisk(baseWeather({ recentSnowfallCm: 8, rainMmHr: 2, temperatureC: 2 }));
+    expect(result.level).toBe("high");
+    expect(result.reason.toLowerCase()).toContain("rain on snow");
+  });
+
+  it("returns unavailable when a required field is not finite", () => {
+    expect(estimateAvalancheRisk(baseWeather({ recentSnowfallCm: NaN })).level).toBe("unavailable");
+  });
 });
