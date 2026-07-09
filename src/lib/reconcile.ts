@@ -108,6 +108,7 @@ function reportContribution(
     ageHours: age,
     hazardType: report.type,
     severity: report.severity,
+    note: isRanger ? (report as RangerAdvisory).message : (report as CrowdReport).note,
   };
 }
 

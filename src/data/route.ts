@@ -6,6 +6,10 @@ import type { Waypoint } from "../types";
 // data — see README for scope notes.
 export const ROUTE_NAME = "Gouter Route (Voie Normale), Mont Blanc";
 
+// Only one route is wired up today; this list exists so the UI can offer a
+// route picker without pretending multi-route support is built yet.
+export const ROUTES: { id: string; name: string }[] = [{ id: "gouter", name: ROUTE_NAME }];
+
 export const waypoints: Waypoint[] = [
   { id: "wp-1", name: "Les Houches Trailhead", order: 1, lat: 45.8917, lng: 6.7997, elevationM: 1008 },
   { id: "wp-2", name: "Bellevue Cable Car Station", order: 2, lat: 45.908, lng: 6.7735, elevationM: 1801 },

@@ -67,6 +67,7 @@ export interface SourceContribution {
   ageHours?: number;
   hazardType?: HazardType; // set for crowd/ranger contributions
   severity?: Severity; // set for crowd/ranger contributions
+  note?: string; // the original report's free text (crowd note / ranger message)
 }
 
 export interface ReconciledWaypoint {

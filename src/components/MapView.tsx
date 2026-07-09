@@ -4,14 +4,14 @@ import { STATUS_META } from "../lib/statusMeta";
 
 interface MapViewProps {
   waypoints: Waypoint[];
+  path: [number, number][];
   reconciled: Map<string, ReconciledWaypoint>;
   selectedId: string | null;
   onSelect: (id: string) => void;
 }
 
-export function MapView({ waypoints, reconciled, selectedId, onSelect }: MapViewProps) {
+export function MapView({ waypoints, path, reconciled, selectedId, onSelect }: MapViewProps) {
   const center: [number, number] = [waypoints[Math.floor(waypoints.length / 2)].lat, waypoints[Math.floor(waypoints.length / 2)].lng];
-  const positions: [number, number][] = waypoints.map((w) => [w.lat, w.lng]);
 
   return (
     <MapContainer center={center} zoom={15} scrollWheelZoom>
@@ -19,7 +19,7 @@ export function MapView({ waypoints, reconciled, selectedId, onSelect }: MapView
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Polyline positions={positions} pathOptions={{ color: "#2a78d6", weight: 3, opacity: 0.7 }} />
+      <Polyline positions={path} pathOptions={{ color: "#2a78d6", weight: 3, opacity: 0.7 }} />
       {waypoints.map((w) => {
         const result = reconciled.get(w.id);
         const meta = result ? STATUS_META[result.status] : STATUS_META.unconfirmed;
