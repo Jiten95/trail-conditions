@@ -1,110 +1,124 @@
-# Trail Conditions
+# Alpine Conditions
 
-A hazard-reconciliation engine for hikers: one route, three different kinds of
-signal (live weather, crowd-submitted reports, and a ranger/advisory feed),
-combined into a single, explainable status per waypoint — with a visible
-confidence score and a one-line "why," never a black box.
+A **terrain-aware alpine conditions engine**. Tap any point — a named waypoint
+on a sample objective, or anywhere on the map — and it assembles the physical
+facts a mountaineer actually reasons about: live weather and wind, the official
+avalanche danger, and deterministic **terrain facts** computed on the spot
+(slope angle, aspect, whether that slope is in sun or shade through the day,
+recent freeze-thaw, and where the wind is loading snow).
 
-Default route: **Schynige Platte → First (Bernese Oberland, Switzerland)** —
-one of the region's classic high-alpine day hikes (7 waypoints: Schynige
-Platte, Oberberghorn, Berghaus Männdlenen, Faulhorn, Bachalpsee, Bachläger,
-First). It's the main route because its trails are fully routable (so the map
-draws the *real* trail path, not a straight line) and it sits inside an
-official avalanche-bulletin region (SLF).
+Every fact is tagged with **where it came from** (its provenance) and how fresh
+it is. The app deliberately **does not** blend these into a single "safe / not
+safe" verdict or a confidence percentage — it presents the evidence and leaves
+the decision to you. See "The line we don't cross" below.
 
-A second route — **Gouter Route (Voie Normale), Mont Blanc, France** — is kept
-as a selectable backup via the picker in the header. It's a good stress test
-of graceful degradation: its upper glaciated legs aren't routable (so those
-segments fall back to straight lines) and it's outside the SLF region (so the
-avalanche card always uses the weather-derived heuristic there).
+## Why this shape (and not "conditions on a trail")
 
-## What's live vs. seeded — please read this before judging
+A conditions feed for catalogued trails is a solved, crowded problem, and it
+only works where there's a curated trail and a crowd. The interesting, less
+served problem is **arbitrary, off-trail alpine terrain with no crowd**: a
+couloir, a ski line, a scramble, a point you drop on a ridge. There's no
+community content to aggregate there, so the base layer has to be a
+**model**: terrain (from a DEM) + weather (from a forecast model) + astronomy
+(sun geometry), all computable for any point on earth. Human observations
+(crowd/ranger) are kept, but demoted to a **sparse correction layer** shown
+alongside the model, never the foundation.
 
-| Source | Status | Detail |
+## The line we don't cross
+
+Alpine hazard calls are life-and-death, so we draw a hard line:
+
+- We surface **Tier B** facts: deterministic terrain/astronomy and live weather,
+  each individually true and auditable.
+- We never emit **Tier C** judgements: no "safe to cross," no "the verglas will
+  be gone by 10:00," no blended go/no-go. Those can't be validated with the data
+  available and are exactly where overconfidence gets people killed.
+
+This is how real avalanche tools work — they hand you danger factors, you make
+the call.
+
+## Sample objectives
+
+- **Schynige Platte → First (Bernese Oberland, Switzerland)** — a classic
+  high-alpine day hike (7 waypoints) whose trails render as a real path and
+  which sits in an official avalanche-bulletin region (SLF).
+- **Gouter Route (Voie Normale), Mont Blanc, France** — a stress test: upper
+  glaciated legs aren't routable (straight-line fallback) and it's outside the
+  SLF region (avalanche always falls back to the heuristic there).
+
+The named waypoints are just starting points. **Tap anywhere on the map** to
+drop a pin and inspect that arbitrary point — this is the actual product, and
+it works with zero crowd data because the base layer is computed, not
+aggregated.
+
+## Provenance, not a confidence score — please read this before judging
+
+There is intentionally no single "confidence %". Instead every signal is
+labeled with one of four provenances, so nothing is a black box:
+
+| Provenance | Meaning | Sources here |
 |---|---|---|
-| **Weather** | **Live** | Every waypoint's lat/lng (and true elevation) is sent to the [Open-Meteo forecast API](https://api.open-meteo.com/v1/forecast) (no key required) for current temperature, precipitation, snowfall, both sustained wind and gusts, and today's sunrise/sunset + daylight duration (used for the "daylight left" readout). The `elevation` parameter is set explicitly per waypoint so Open-Meteo lapse-rate-corrects temperature to the real altitude — without it, a high alpine point can read many degrees warmer than reality because the model's grid cell defaults to a coarser, lower average elevation. Refetched every 5 minutes. |
-| **Avalanche danger** | **Live (official) in season, heuristic fallback off-season** | When the [SLF](https://www.slf.ch/en/avalanche-bulletin-and-snow-situation/) (Switzerland's WSL Institute for Snow and Avalanche Research) publishes an active bulletin covering a waypoint, the app shows that **official** EAWS danger level (`src/lib/slfAvalanche.ts`, matched by point-in-polygon against SLF's public GeoJSON). Bulletins are seasonal (winter/spring only), so out of season — and in the summer hiking season this route is used — there is no live bulletin; the app then falls back to a transparent heuristic (`src/lib/avalancheRisk.ts`) computed from the *same* live Open-Meteo call (recent snowfall + wind gusts + freeze-thaw temperature). The UI always labels which of the two is showing. |
-| **Trail geometry** | **Live** | The line drawn between waypoints is routed on the real trail network by [BRouter](https://brouter.de/)'s hiking profile (no key required, `src/lib/routeGeometry.ts`), cached in `localStorage`. Any leg the router can't support degrades to a straight line, so the map is never worse than a plain polyline. Map tiles are © OpenStreetMap. |
-| **Crowd hazard reports** | **Seeded + live client-side** | Ships with 6-8 mock reports (`src/data/seedReports.ts`) with staggered timestamps so every decay tier is visible on load. The in-app report form adds *real* new reports to this pool immediately (persisted to `localStorage`), which is what makes the reconciliation engine live-updating — but there is no shared backend, so submissions are local to your browser, not a real multi-user crowd-sourcing system. |
-| **Ranger / trail-office advisory** | **Seeded, illustrative only** | 4 mock advisories (`src/data/seedAdvisories.ts`) simulating a bulletin from a body like the local Bergführer office or mountain rescue. This is **not** a real integration with any trail authority — it exists to demonstrate a third, higher-trust source type in the reconciliation math. |
+| **official** | A real published authority feed | [SLF](https://www.slf.ch/en/avalanche-bulletin-and-snow-situation/) avalanche bulletin (in season, matched by point-in-polygon) |
+| **modeled** | Numerical weather-model output, or a fact derived from it | [Open-Meteo](https://open-meteo.com/) temperature/precip/wind/snow; freeze-thaw history; wind-loading geometry; the avalanche *heuristic* fallback; daylight |
+| **computed** | Deterministic math on terrain (DEM) or astronomy | Slope angle & aspect (Open-Meteo elevation grid, Horn's method); sun-on-slope (solar position) |
+| **reported** | A human observation | Seeded crowd reports + ranger advisories (illustrative; the report form adds real local ones) |
 
-We're calling this out explicitly because overclaiming a live integration we
-don't have would be worse than being upfront about scope.
+Notes on honesty:
 
-## The reconciliation engine (the core IP)
+- Open-Meteo "current" values are **model output**, not station measurements —
+  so they're labeled `modeled`, not "measured."
+- Terrain slope/aspect come from a **3x3 elevation grid** sampled around the
+  point via Open-Meteo's keyless elevation API and reduced with Horn's method;
+  it degrades to "terrain unavailable" (weather still shows) if the source is
+  unreachable — same graceful-degradation pattern as everything else.
+- The avalanche card is the **official SLF bulletin** when one covers the point
+  in season, otherwise a transparent **heuristic** from live weather, always
+  labeled which.
+- Crowd/ranger data is **seeded and illustrative** — there is no shared backend.
+  The in-app form adds real reports to `localStorage` (local to your browser).
 
-All logic lives in `src/lib/reconcile.ts`, is pure/stateless, and has unit
-tests in `src/lib/reconcile.test.ts`. No UI or fetching code is required to
-understand or verify it.
+## The engine (the core logic)
 
-**Decay.** Crowd and ranger reports lose confidence weight with age:
+`src/lib/conditions.ts` — `assembleConditions(...)` — is pure/stateless and unit
+tested (`conditions.test.ts`). It takes weather + terrain + sun + freeze-thaw +
+wind-loading + avalanche + observations and returns a `PointConditions`: a list
+of provenance-tagged `Signal`s plus a factual `conditionsSeverity` used only to
+color the map marker. `conditionsSeverity` describes the current weather /
+avalanche state (calm / elevated / severe) — it is **not** a safety verdict.
 
-| Age | Weight |
-|---|---|
-| < 6h | full (1.0×) |
-| 6-24h | half (0.5×) |
-| 24-72h | low (0.2×) |
-| > 72h | expired — excluded from the score entirely |
+The deterministic pieces are their own pure, tested libraries:
 
-Live weather never decays — it's re-fetched on every load, so it's always
-"now."
+- `src/lib/terrain.ts` — slope + aspect from an elevation grid (Horn's method).
+- `src/lib/sun.ts` — solar position + sun-on-slope timeline for the day.
+- `src/lib/derivations.ts` — freeze-thaw history and wind-loading geometry.
 
-**Confidence weights.** Each source type has a base trust weight before decay
-is applied: weather `1.0`, ranger advisory `0.9`, crowd report `0.6`. A
-waypoint's total confidence is (very roughly) *how much fresh, corroborating
-weight is behind the verdict*, scaled against "all three sources present,
-fresh, and agreeing" as the ceiling.
-
-**Cross-source disagreement.** Not every crowd/ranger report is comparable to
-weather — a rockfall or wildlife sighting has nothing to do with rain or wind,
-so it's treated as an independent hazard signal. Only *weather-correlated*
-report types (`flooding`, `ice`, `high-wind`, `lightning`) are checked against
-the live weather reading for agreement. If weather reads clear but a fresh
-weather-correlated report flags a hazard (or vice versa), the engine does
-**not** silently pick one side — it returns `status: "unconfirmed"`, caps
-confidence, and the "why" states both readings explicitly ("conflicting
-signals").
-
-**Combined status.** When sources aren't in conflict, hazard levels (0-3,
-derived from severity for reports and from precipitation/wind/temperature
-thresholds for weather) are combined into a confidence-weighted average and
-mapped to `clear` / `caution` / `hazard`. Every waypoint's detail view shows
-each individual source's raw reading, its weight × decay, and the resulting
-effective weight — so the verdict is auditable, not asserted.
+Reported observations age out of relevance (fresh < 6h, recent 6-24h, aging
+24-72h, dropped past 72h); they're shown as independent signals, never merged
+into the model.
 
 ## Screens
 
-1. **Map view** (`src/components/MapView.tsx`) — the route as a real,
-   trail-following polyline over 7 waypoints; marker color + symbol (never
-   color alone) show reconciled status.
-2. **Waypoint detail** (`src/components/WaypointDetail.tsx`) — a 4-metric row
-   (weather, wind, avalanche danger, next hazard), a daylight-remaining
-   readout, every source's current reading with its confidence weight and
-   decay, the reconciled verdict and the one-line why, and clickable links out
-   to the live data providers. Swipe left/right (or tap the tabs) to switch
-   between Conditions and Submit report.
-3. **Report submission** (`src/components/ReportForm.tsx`) — add a hazard
-   report to the selected waypoint; it's reconciled immediately.
+1. **Map** (`src/components/MapView.tsx`) — sample-objective waypoints plus a
+   drop-anywhere pin; marker color + symbol (never color alone) show the factual
+   conditions severity.
+2. **Point detail** (`src/components/WaypointDetail.tsx`) — the conditions
+   severity (clearly labeled "not a verdict"), a sun-on-slope timeline with a
+   "project sun to +2/4/6h" control, then every signal with its provenance
+   badge, value, a neutral "what this means," and freshness. Swipe/tab to the
+   "Add observation" form.
 
 ## Running it
 
 ```bash
 npm install
 npm run dev      # starts the Vite dev server
-npm test         # runs the reconciliation engine's unit tests
+npm test         # runs the engine + terrain/sun/derivation unit tests
 ```
 
-## Out of scope (v2 roadmap)
+## Out of scope (roadmap)
 
-- A real, shared guide/ranger feed (the ranger advisories are still seeded; the
-  avalanche danger *is* now a live SLF integration in season, with a heuristic
-  fallback out of season)
-- NASA FIRMS or other hazard feeds beyond weather + avalanche
-- Offline / dead-zone last-known-position capture
-- Authentication
-- Real crowd-sourcing at scale (a shared backend, moderation, spam handling)
-- More granular waypoints than the current 7 checkpoints (see below)
-
-These are intentionally not attempted here — the point of this build is the
-reconciliation logic across genuinely different, real source types, not a
-larger surface area of unfinished integrations.
+- GPX import / draw-a-line objectives, marker clustering.
+- Any predictive (Tier C) hazard call.
+- Offline / dead-zone capture, authentication, a shared crowd backend.
+- Calibrating the model against ground truth at scale (the honest cold-start
+  gap: with little crowd data, "verified" coverage is thin).
