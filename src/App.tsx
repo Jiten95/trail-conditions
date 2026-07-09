@@ -9,7 +9,6 @@ import { useWeather } from "./hooks/useWeather";
 import { useTrailGeometry } from "./hooks/useTrailGeometry";
 import { reconcileWaypoint } from "./lib/reconcile";
 import type { ReconciledWaypoint } from "./types";
-import { STATUS_META } from "./lib/statusMeta";
 
 function AppContent() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -56,19 +55,6 @@ function AppContent() {
             {weatherState.loading && " · fetching live weather…"}
             {weatherState.error && ` · ${weatherState.error}`}
           </div>
-        </div>
-        <div className="legend">
-          {(Object.keys(STATUS_META) as (keyof typeof STATUS_META)[]).map((key) => {
-            const meta = STATUS_META[key];
-            return (
-              <div className="legend-item" key={key}>
-                <span className="legend-dot" style={{ background: meta.color }}>
-                  {meta.symbol}
-                </span>
-                {meta.label}
-              </div>
-            );
-          })}
         </div>
       </header>
       <div className="app-body">

@@ -5,19 +5,12 @@ import { ReportForm } from "./ReportForm";
 import { TYPE_LABEL } from "../lib/reconcile";
 import { estimateAvalancheRisk } from "../lib/avalancheRisk";
 import { waypoints } from "../data/route";
-import { ThermometerIcon, WindIcon, AlertTriangleIcon, FlagIcon, ChevronIcon } from "./icons";
+import { ChevronIcon } from "./icons";
 
 const SOURCE_LABEL: Record<string, string> = {
   weather: "Open-Meteo (live)",
   crowd: "Crowd report",
   ranger: "Ranger advisory",
-};
-
-const RISK_ACCENT: Record<string, string> = {
-  low: "accent-good",
-  moderate: "accent-warning",
-  high: "accent-critical",
-  unavailable: "accent-muted",
 };
 
 interface WaypointDetailProps {
@@ -46,7 +39,6 @@ export function WaypointDetail({ waypoint, result, weather }: WaypointDetailProp
     .sort((a, b) => b.hazardLevel * b.effectiveWeight - a.hazardLevel * a.effectiveWeight)[0];
 
   const avalanche = weather ? estimateAvalancheRisk(weather) : null;
-  const hazardAccent = activeHazard && result ? `accent-status-${result.status}` : "accent-info";
 
   return (
     <div>
@@ -77,9 +69,6 @@ export function WaypointDetail({ waypoint, result, weather }: WaypointDetailProp
 
           <div className="metrics-row">
             <div className="metric-col">
-              <div className="metric-icon">
-                <ThermometerIcon />
-              </div>
               <div className="metric-label">Weather</div>
               <div className="metric-value">{weather.temperatureC.toFixed(0)}°C</div>
               <div className="metric-sub">
@@ -91,17 +80,11 @@ export function WaypointDetail({ waypoint, result, weather }: WaypointDetailProp
               </div>
             </div>
             <div className="metric-col">
-              <div className="metric-icon">
-                <WindIcon />
-              </div>
               <div className="metric-label">Wind</div>
               <div className="metric-value">{weather.windSpeedKph.toFixed(0)} kph</div>
               <div className="metric-sub">gusts {weather.windGustsKph.toFixed(0)} kph</div>
             </div>
-            <div className={`metric-col ${RISK_ACCENT[avalanche?.level ?? "unavailable"]}`}>
-              <div className="metric-icon">
-                <AlertTriangleIcon />
-              </div>
+            <div className="metric-col">
               <div className="metric-label">Avalanche risk</div>
               <div className={`metric-value risk-${avalanche?.level ?? "unavailable"}`}>
                 {avalanche ? avalanche.level : "—"}
@@ -110,10 +93,7 @@ export function WaypointDetail({ waypoint, result, weather }: WaypointDetailProp
                 heuristic est.
               </div>
             </div>
-            <div className={`metric-col ${hazardAccent}`}>
-              <div className="metric-icon">
-                <FlagIcon />
-              </div>
+            <div className="metric-col">
               <div className="metric-label">{activeHazard ? "Active hazard" : "Coming up"}</div>
               <div className="metric-value">
                 {activeHazard

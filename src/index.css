@@ -104,32 +104,6 @@ textarea {
   cursor: pointer;
 }
 
-.legend {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.legend-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
-}
-
 .app-body {
   flex: 1;
   position: relative;
@@ -152,7 +126,7 @@ textarea {
   border-radius: 999px;
   padding: 8px 16px;
   font-size: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   z-index: 900;
   pointer-events: none;
   white-space: nowrap;
@@ -168,7 +142,7 @@ textarea {
   overflow-y: auto;
   background: var(--surface-1);
   border-radius: 16px 16px 0 0;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.12);
   padding: 0 16px 20px;
   border-top: 1px solid var(--border);
 }
@@ -219,9 +193,6 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
   margin-bottom: 12px;
 }
 
@@ -304,55 +275,9 @@ textarea {
 
 .metric-col {
   background: var(--page-plane);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--border);
   border-radius: 8px;
   padding: 8px;
   text-align: center;
-  transition: border-color 0.15s ease;
-}
-
-.metric-icon {
-  display: flex;
-  justify-content: center;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-
-.metric-col.accent-good {
-  border-left-color: #0ca30c;
-}
-
-.metric-col.accent-warning {
-  border-left-color: #fab219;
-}
-
-.metric-col.accent-critical {
-  border-left-color: #d03b3b;
-}
-
-.metric-col.accent-muted {
-  border-left-color: var(--text-muted);
-}
-
-.metric-col.accent-info {
-  border-left-color: var(--series-1);
-}
-
-.metric-col.accent-status-clear {
-  border-left-color: #0ca30c;
-}
-
-.metric-col.accent-status-caution {
-  border-left-color: #fab219;
-}
-
-.metric-col.accent-status-hazard {
-  border-left-color: #d03b3b;
-}
-
-.metric-col.accent-status-unconfirmed {
-  border-left-color: var(--text-muted);
 }
 
 .metric-label {
@@ -421,47 +346,13 @@ textarea {
   margin: 0 0 16px;
 }
 
-.meter-track {
-  height: 8px;
-  border-radius: 4px;
-  background: var(--gridline);
-  overflow: hidden;
-  margin: 4px 0 2px;
-}
-
-.meter-fill {
-  height: 100%;
-  background: var(--series-1);
-  border-radius: 4px;
-}
-
-.meter-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
-.meter-label .value {
-  font-variant-numeric: tabular-nums;
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.section-title {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  margin: 18px 0 8px;
-}
-
 .source-row {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 2px;
+}
+
+.source-row:last-child {
+  border-bottom: none;
 }
 
 .source-row .source-row-top {
@@ -578,15 +469,4 @@ form.report-form button:hover {
   height: 100%;
   width: 100%;
   background: var(--page-plane);
-}
-
-.marker-badge {
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  border: 2px solid white;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
