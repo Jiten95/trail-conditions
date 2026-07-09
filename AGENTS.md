@@ -7,12 +7,15 @@ look for automatically.)
 ## What this is
 
 Trail Conditions — a hazard-reconciliation engine for hikers, built around
-Mont Blanc's Gouter Route (Voie Normale). One route, three kinds of signal
-(live weather, crowd-submitted reports, ranger/guide advisories) combined
-into a single, explainable status per waypoint with a visible confidence
-score and a one-line "why." See `README.md` for the full pitch, the
-live-vs-seeded data source table, and out-of-scope items — don't duplicate
-that here, read it there.
+the Schynige Platte → First "Faulhornweg" ridge hike in the Bernese Oberland,
+Switzerland. One route, several kinds of signal (live weather, the official
+SLF avalanche bulletin, crowd-submitted reports, ranger/guide advisories)
+combined into a single, explainable status per waypoint with a visible
+confidence score and a one-line "why." The route is Swiss on purpose: SLF's
+avalanche bulletin is a key-less, CORS-open API, so we can show a real
+official danger level (France's Mont-Blanc BERA can't be used client-side).
+See `README.md` for the full pitch, the live-vs-seeded data source table, and
+out-of-scope items — don't duplicate that here, read it there.
 
 ## Stack
 
@@ -34,17 +37,23 @@ that here, read it there.
 - `src/lib/weather.ts` — live Open-Meteo fetch, elevation-corrected per
   waypoint (mountain terrain needs a real elevation or temperature reads
   wrong by several degrees).
-- `src/lib/avalancheRisk.ts` — a derived heuristic from live weather data.
-  **Not** an official avalanche bulletin — keep it labeled as such anywhere
-  it surfaces in the UI.
+- `src/lib/avalancheBulletin.ts` — the **official** avalanche source. Fetches
+ SLF's Swiss bulletin (CAAMLv6 JSON, key-less, CORS-open) and maps each
+ waypoint's `slfRegionId` to an EAWS danger level (1–5). Seasonal — returns
+ nothing ~Jun–Oct. `parseSlfBulletins` is pure and unit-tested.
+- `src/lib/avalancheRisk.ts` — the **fallback** heuristic from live weather
+ data, used only when there's no live SLF bulletin. **Not** an official
+ avalanche bulletin — keep it labeled as such (the UI shows "SLF official"
+ vs. "Heuristic — no live bulletin") anywhere it surfaces.
 - `src/lib/routeGeometry.ts` — fetches/stitches real trail geometry from OSM
   Overpass per leg between named waypoints, with a straight-line fallback
   per leg if the live data doesn't stitch cleanly. **Unverified visually as
   of this handover** — see Known Issues.
-- `src/data/route.ts` — the 7 named waypoints for the one hardcoded route.
-  `ROUTES` is a stub array for a future route picker, not a real multi-route
-  system yet — don't build more route-switching machinery than the UI
-  currently exposes without being asked.
+- `src/data/route.ts` — the 6 named waypoints for the one hardcoded route
+ (Schynige Platte → First), each carrying an `slfRegionId` for the official
+ avalanche lookup. `ROUTES` is a stub array for a future route picker, not a
+ real multi-route system yet — don't build more route-switching machinery
+ than the UI currently exposes without being asked.
 - `src/data/seedReports.ts` / `seedAdvisories.ts` — seeded/mock crowd +
   ranger data with staggered timestamps so every decay tier is visible on
   load.

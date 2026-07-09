@@ -1,23 +1,27 @@
 # Trail Conditions
 
-A hazard-reconciliation engine for hikers: one route, three different kinds of
-signal (live weather, crowd-submitted reports, and a ranger/advisory feed),
-combined into a single, explainable status per waypoint — with a visible
-confidence score and a one-line "why," never a black box.
+A hazard-reconciliation engine for hikers: one route, several different kinds
+of signal (live weather, the official avalanche bulletin, crowd-submitted
+reports, and a ranger/advisory feed), combined into a single, explainable
+status per waypoint — with a visible confidence score and a one-line "why,"
+never a black box.
 
-Route used for the demo: **Gouter Route (Voie Normale), Mont Blanc** — the
-mountain's standard and most-climbed ascent line (7 waypoints, Les Houches
-trailhead to the summit, including the Grand Couloir — the route's single
-most notorious rockfall hazard).
+Route used for the demo: **Schynige Platte → First (the "Faulhornweg"),
+Bernese Oberland, Switzerland** — one of the classic Swiss ridge hikes above
+Grindelwald/Interlaken (6 waypoints, from the Schynige Platte cog-railway
+station over the Faulhorn to Grindelwald First). It's in Switzerland
+deliberately: SLF publishes the Swiss avalanche bulletin as a key-less,
+CORS-open API, so we can wire in a *real* official avalanche danger level
+per waypoint — see below.
 
 ## What's live vs. seeded — please read this before judging
 
 | Source | Status | Detail |
 |---|---|---|
-| **Weather** | **Live** | Every waypoint's lat/lng (and true elevation) is sent to the [Open-Meteo forecast API](https://api.open-meteo.com/v1/forecast) (no key required) for current temperature, precipitation, snowfall, and both sustained wind and gusts. The `elevation` parameter is set explicitly per waypoint so Open-Meteo lapse-rate-corrects temperature to the real altitude — without it, a high alpine refuge can read many degrees warmer than reality because the model's grid cell defaults to a coarser, lower average elevation. Refetched every 5 minutes. |
-| **Avalanche risk indicator** | **Derived from live data, not an official bulletin** | `src/lib/avalancheRisk.ts` computes a low/moderate/high estimate from the *same* live Open-Meteo call using a transparent, point-based scoring of the weather-driven avalanche factors we can observe live: new-snow load, snow falling now, wind transport (wind slabs), rain-on-snow, and thermal instability (freeze-thaw / daytime warming). Each factor's contribution is returned so the estimate stays auditable. This is **not** a feed from any real avalanche center. The official product for this area is Météo-France's **BERA** (Bulletin d'Estimation du Risque d'Avalanche, Mont-Blanc massif), but it can't be consumed by this key-less, backend-less, browser-only app: it needs an authenticated Météo-France API key, isn't CORS-accessible from the browser (needs a server proxy), and is **seasonal** (issued ~Nov–May only, so there is no bulletin in summer). Labeled as a heuristic in the UI. |
-| **Crowd hazard reports** | **Seeded + live client-side** | Ships with 6-8 mock reports (`src/data/seedReports.ts`) with staggered timestamps so every decay tier is visible on load. The in-app report form adds *real* new reports to this pool immediately (persisted to `localStorage`), which is what makes the reconciliation engine live-updating — but there is no shared backend, so submissions are local to your browser, not a real multi-user crowd-sourcing system. |
-| **Ranger / guide-office advisory** | **Seeded, illustrative only** | 4 mock advisories (`src/data/seedAdvisories.ts`) simulating a bulletin from a body like the Compagnie des Guides. This is **not** a real integration with any guide service, avalanche.org, or similar — it exists to demonstrate a third, higher-trust source type in the reconciliation math. |
+| **Weather** | **Live** | Every waypoint's lat/lng (and true elevation) is sent to the [Open-Meteo forecast API](https://api.open-meteo.com/v1/forecast) (no key required) for current temperature, precipitation, snowfall, and both sustained wind and gusts. The `elevation` parameter is set explicitly per waypoint so Open-Meteo lapse-rate-corrects temperature to the real altitude — without it, a high alpine point can read many degrees warmer than reality because the model's grid cell defaults to a coarser, lower average elevation. Refetched every 5 minutes. |
+| **Avalanche danger** | **Live official bulletin (seasonal), with a heuristic fallback** | **Primary: the official [SLF](https://www.slf.ch) Swiss avalanche bulletin** (`src/lib/avalancheBulletin.ts`) — fetched from SLF's key-less, CORS-open CAAMLv6 JSON API (`aws.slf.ch/api/bulletin/caaml`, CC BY 4.0). Each waypoint is mapped to its SLF warning region (via the SLF sector API), and we show that region's official EAWS danger level (1–5). It is **seasonal**: SLF issues bulletins ~Nov–May, so out of season the endpoint returns an empty list. **Fallback: a heuristic** (`src/lib/avalancheRisk.ts`) — when there's no live bulletin, we compute a transparent, point-based low/moderate/high estimate from the *same* live Open-Meteo call (new-snow load, snow falling now, wind transport, rain-on-snow, thermal instability). The UI labels which one you're seeing: "SLF official" vs. "Heuristic — no live bulletin". The heuristic is **not** an official bulletin. (France's Mont-Blanc BERA, by contrast, can't be used here — it needs an authenticated Météo-France key and a server proxy — which is part of why the demo route is Swiss.) |
+| **Crowd hazard reports** | **Seeded + live client-side** | Ships with 8 mock reports (`src/data/seedReports.ts`) with staggered timestamps so every decay tier is visible on load. The in-app report form adds *real* new reports to this pool immediately (persisted to `localStorage`), which is what makes the reconciliation engine live-updating — but there is no shared backend, so submissions are local to your browser, not a real multi-user crowd-sourcing system. |
+| **Ranger / guide-office advisory** | **Seeded, illustrative only** | 4 mock advisories (`src/data/seedAdvisories.ts`) simulating a bulletin from a body like the SAC (Swiss Alpine Club) hut wardens or the Grindelwald mountain guides. This is **not** a real integration with any guide service — it exists to demonstrate a higher-trust source type in the reconciliation math. |
 
 We're calling this out explicitly because overclaiming a live integration we
 don't have would be worse than being upfront about scope.
@@ -66,7 +70,7 @@ effective weight — so the verdict is auditable, not asserted.
 ## Screens
 
 1. **Map view** (`src/components/MapView.tsx`) — the route as a polyline over
-   7 waypoints; marker color + symbol (never color alone) show reconciled
+   6 waypoints; marker color + symbol (never color alone) show reconciled
    status.
 2. **Waypoint detail** (`src/components/WaypointDetail.tsx`) — every source's
    current reading, its confidence weight and decay, the reconciled verdict,
@@ -84,13 +88,15 @@ npm test         # runs the reconciliation engine's unit tests
 
 ## Out of scope (v2 roadmap)
 
-- Live integration with avalanche.org, NASA FIRMS, or a real guide/ranger feed
-  (the in-app "avalanche risk" indicator is our own heuristic over live
-  weather data, not a substitute for this)
+- Non-Swiss official avalanche bulletins (e.g. France's Météo-France BERA or
+  NASA FIRMS), which need server-side keys/proxies — the live avalanche
+  bulletin here is SLF (Switzerland) only; elsewhere we fall back to the
+  weather heuristic
+- A real, shared guide/ranger feed (the advisory source is still seeded)
 - Offline / dead-zone last-known-position capture
 - Authentication
 - Real crowd-sourcing at scale (a shared backend, moderation, spam handling)
-- More granular waypoints than the current 7 checkpoints (see below)
+- More granular waypoints than the current 6 checkpoints (see below)
 
 These are intentionally not attempted here — the point of this build is the
 reconciliation logic across genuinely different, real source types, not a
