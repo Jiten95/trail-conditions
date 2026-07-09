@@ -7,7 +7,6 @@ import { TYPE_LABEL } from "../lib/reconcile";
 import { estimateAvalancheRisk, type AvalancheRiskLevel } from "../lib/avalancheRisk";
 import { SLF_WEBSITE_URL, type OfficialAvalancheReport } from "../lib/slfAvalanche";
 import { getDaylightInfo } from "../lib/daylight";
-import { waypoints } from "../data/route";
 import { ThermometerIcon, WindIcon, AlertTriangleIcon, FlagIcon, ChevronIcon, SunIcon } from "./icons";
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -35,12 +34,13 @@ const SWIPE_THRESHOLD_PX = 55;
 
 interface WaypointDetailProps {
   waypoint: Waypoint;
+  routeWaypoints: Waypoint[];
   result: ReconciledWaypoint | null;
   weather: WeatherReading | null;
   avalancheOfficial: OfficialAvalancheReport | null;
 }
 
-export function WaypointDetail({ waypoint, result, weather, avalancheOfficial }: WaypointDetailProps) {
+export function WaypointDetail({ waypoint, routeWaypoints, result, weather, avalancheOfficial }: WaypointDetailProps) {
   const [tab, setTab] = useState<"conditions" | "report">("conditions");
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
@@ -71,7 +71,7 @@ export function WaypointDetail({ waypoint, result, weather, avalancheOfficial }:
     }
   }
 
-  const nextWaypoint = waypoints.find((w) => w.order === waypoint.order + 1);
+  const nextWaypoint = routeWaypoints.find((w) => w.order === waypoint.order + 1);
   const activeHazard = result?.contributions
     .filter((c) => c.source !== "weather" && c.effectiveWeight > 0)
     .sort((a, b) => b.hazardLevel * b.effectiveWeight - a.hazardLevel * a.effectiveWeight)[0];
@@ -89,7 +89,7 @@ export function WaypointDetail({ waypoint, result, weather, avalancheOfficial }:
   return (
     <div>
       <p className="waypoint-subtitle">
-        Waypoint {waypoint.order} of {waypoints.length}
+        Waypoint {waypoint.order} of {routeWaypoints.length}
       </p>
       <h2 className="waypoint-title">{waypoint.name}</h2>
 

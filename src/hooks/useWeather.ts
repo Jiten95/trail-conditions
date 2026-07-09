@@ -47,8 +47,8 @@ export function useWeather(waypoints: Waypoint[]): WeatherState {
       cancelled = true;
       clearInterval(interval);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Re-fetch when the selected route (its waypoints) changes.
+  }, [waypoints]);
 
   return { readings, loading, error, lastFetchedAt };
 }

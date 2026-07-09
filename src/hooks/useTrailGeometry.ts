@@ -12,6 +12,10 @@ export function useTrailGeometry(waypoints: Waypoint[]): { path: [number, number
 
   useEffect(() => {
     let cancelled = false;
+    // Show a straight-line placeholder for the new route immediately, then
+    // upgrade to the routed path once it resolves.
+    setPath(straightLine(waypoints));
+    setLoading(true);
     fetchTrailGeometry(waypoints)
       .then((p) => {
         if (!cancelled) setPath(p);
@@ -22,8 +26,7 @@ export function useTrailGeometry(waypoints: Waypoint[]): { path: [number, number
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [waypoints]);
 
   return { path, loading };
 }

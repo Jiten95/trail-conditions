@@ -3,7 +3,7 @@ import { MapView } from "./components/MapView";
 import { WaypointDetail } from "./components/WaypointDetail";
 import { BottomSheet } from "./components/BottomSheet";
 import { ReportsProvider, useReports } from "./state/reportsStore";
-import { waypoints, ROUTES } from "./data/route";
+import { ROUTES, DEFAULT_ROUTE_ID, getRoute } from "./data/route";
 import { seedRangerAdvisories } from "./data/seedAdvisories";
 import { useWeather } from "./hooks/useWeather";
 import { useTrailGeometry } from "./hooks/useTrailGeometry";
@@ -14,11 +14,18 @@ import { STATUS_META } from "./lib/statusMeta";
 
 function AppContent() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [routeId, setRouteId] = useState(ROUTES[0].id);
+  const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
+  const activeRoute = getRoute(routeId);
+  const waypoints = activeRoute.waypoints;
   const weatherState = useWeather(waypoints);
   const trail = useTrailGeometry(waypoints);
   const avalanche = useAvalanche(waypoints);
   const { reports } = useReports();
+
+  function handleRouteChange(id: string) {
+    setSelectedId(null);
+    setRouteId(id);
+  }
 
   const reconciled = useMemo(() => {
     const map = new Map<string, ReconciledWaypoint>();
@@ -29,7 +36,7 @@ function AppContent() {
       map.set(wp.id, reconcileWaypoint(wp.id, weather, reports, seedRangerAdvisories, now));
     }
     return map;
-  }, [weatherState.readings, reports]);
+  }, [weatherState.readings, reports, waypoints]);
 
   const selectedWaypoint = waypoints.find((w) => w.id === selectedId) ?? null;
   const selectedResult = selectedId ? (reconciled.get(selectedId) ?? null) : null;
@@ -47,7 +54,7 @@ function AppContent() {
                 className="route-select"
                 aria-label="Select route"
                 value={routeId}
-                onChange={(e) => setRouteId(e.target.value)}
+                onChange={(e) => handleRouteChange(e.target.value)}
               >
                 {ROUTES.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -77,6 +84,7 @@ function AppContent() {
       <div className="app-body">
         <div className="map-pane">
           <MapView
+            key={activeRoute.id}
             waypoints={waypoints}
             path={trail.path}
             reconciled={reconciled}
@@ -89,6 +97,7 @@ function AppContent() {
           <BottomSheet onClose={() => setSelectedId(null)} ariaLabel={`${selectedWaypoint.name} details`}>
             <WaypointDetail
               waypoint={selectedWaypoint}
+              routeWaypoints={waypoints}
               result={selectedResult}
               weather={selectedWeather}
               avalancheOfficial={selectedAvalanche}

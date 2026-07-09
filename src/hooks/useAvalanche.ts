@@ -22,6 +22,9 @@ export function useAvalanche(waypoints: Waypoint[]): AvalancheState {
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setOfficial(new Map());
+    setInSeason(false);
     fetchBulletin()
       .then((collection) => {
         if (cancelled || collection === null) return;
@@ -39,8 +42,8 @@ export function useAvalanche(waypoints: Waypoint[]): AvalancheState {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Re-resolve official ratings when the selected route changes.
+  }, [waypoints]);
 
   return { official, loading, inSeason };
 }
