@@ -289,6 +289,49 @@ textarea {
   border-bottom-color: var(--series-1);
 }
 
+.tab-swipe-hint {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin: -8px 0 10px;
+  user-select: none;
+}
+
+.tab-swipe {
+  touch-action: pan-y;
+}
+
+.daylight-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--page-plane);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 4px 0 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.daylight-icon {
+  display: inline-flex;
+  color: #e0a21a;
+}
+
+.daylight-summary {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.daylight-times {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
 .metrics-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -380,6 +423,14 @@ textarea {
 
 .metric-value.risk-high {
   color: #d03b3b;
+}
+
+.metric-value.risk-considerable {
+  color: #e07b1a;
+}
+
+.metric-value.risk-very-high {
+  color: #b02525;
 }
 
 .metric-value.risk-unavailable {
@@ -512,6 +563,44 @@ textarea {
   font-style: italic;
   color: var(--text-secondary);
   line-height: 1.4;
+}
+
+.source-link {
+  color: var(--series-1);
+  text-decoration: none;
+}
+
+.source-link:hover {
+  text-decoration: underline;
+}
+
+.metrics-caption a {
+  color: var(--series-1);
+}
+
+.sources-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sources-footer-label {
+  font-weight: 600;
+}
+
+.sources-footer a {
+  color: var(--series-1);
+  text-decoration: none;
+}
+
+.sources-footer a:hover {
+  text-decoration: underline;
 }
 
 form.report-form {

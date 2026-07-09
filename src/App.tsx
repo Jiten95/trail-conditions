@@ -7,6 +7,7 @@ import { waypoints, ROUTES } from "./data/route";
 import { seedRangerAdvisories } from "./data/seedAdvisories";
 import { useWeather } from "./hooks/useWeather";
 import { useTrailGeometry } from "./hooks/useTrailGeometry";
+import { useAvalanche } from "./hooks/useAvalanche";
 import { reconcileWaypoint } from "./lib/reconcile";
 import type { ReconciledWaypoint } from "./types";
 import { STATUS_META } from "./lib/statusMeta";
@@ -16,6 +17,7 @@ function AppContent() {
   const [routeId, setRouteId] = useState(ROUTES[0].id);
   const weatherState = useWeather(waypoints);
   const trail = useTrailGeometry(waypoints);
+  const avalanche = useAvalanche(waypoints);
   const { reports } = useReports();
 
   const reconciled = useMemo(() => {
@@ -32,6 +34,7 @@ function AppContent() {
   const selectedWaypoint = waypoints.find((w) => w.id === selectedId) ?? null;
   const selectedResult = selectedId ? (reconciled.get(selectedId) ?? null) : null;
   const selectedWeather = selectedId ? (weatherState.readings.get(selectedId) ?? null) : null;
+  const selectedAvalanche = selectedId ? (avalanche.official.get(selectedId) ?? null) : null;
 
   return (
     <div className="app">
@@ -84,7 +87,12 @@ function AppContent() {
         {!selectedWaypoint && <div className="map-hint">Tap a marker to view conditions or submit a report</div>}
         {selectedWaypoint && (
           <BottomSheet onClose={() => setSelectedId(null)} ariaLabel={`${selectedWaypoint.name} details`}>
-            <WaypointDetail waypoint={selectedWaypoint} result={selectedResult} weather={selectedWeather} />
+            <WaypointDetail
+              waypoint={selectedWaypoint}
+              result={selectedResult}
+              weather={selectedWeather}
+              avalancheOfficial={selectedAvalanche}
+            />
           </BottomSheet>
         )}
       </div>
