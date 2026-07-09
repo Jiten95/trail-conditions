@@ -4,6 +4,7 @@ export interface Waypoint {
   order: number;
   lat: number;
   lng: number;
+  elevationM: number;
 }
 
 export type HazardType =
@@ -43,8 +44,13 @@ export interface WeatherReading {
   fetchedAt: string; // ISO
   temperatureC: number;
   precipitationMmHr: number;
+  rainMmHr: number;
+  showersMmHr: number;
+  snowfallCm: number; // current instantaneous snowfall rate
   windSpeedKph: number;
+  windGustsKph: number;
   weatherCode: number;
+  recentSnowfallCm: number; // sum of yesterday + today's forecasted snowfall
   source: "weather";
 }
 
@@ -59,6 +65,8 @@ export interface SourceContribution {
   decayFactor: number; // 0-1
   effectiveWeight: number; // baseWeight * decayFactor
   ageHours?: number;
+  hazardType?: HazardType; // set for crowd/ranger contributions
+  severity?: Severity; // set for crowd/ranger contributions
 }
 
 export interface ReconciledWaypoint {

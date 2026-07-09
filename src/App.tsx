@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { MapView } from "./components/MapView";
 import { WaypointDetail } from "./components/WaypointDetail";
+import { BottomSheet } from "./components/BottomSheet";
 import { ReportsProvider, useReports } from "./state/reportsStore";
 import { waypoints, ROUTE_NAME } from "./data/route";
 import { seedRangerAdvisories } from "./data/seedAdvisories";
@@ -26,7 +27,8 @@ function AppContent() {
   }, [weatherState.readings, reports]);
 
   const selectedWaypoint = waypoints.find((w) => w.id === selectedId) ?? null;
-  const selectedResult = selectedId ? reconciled.get(selectedId) ?? null : null;
+  const selectedResult = selectedId ? (reconciled.get(selectedId) ?? null) : null;
+  const selectedWeather = selectedId ? (weatherState.readings.get(selectedId) ?? null) : null;
 
   return (
     <div className="app">
@@ -59,13 +61,9 @@ function AppContent() {
         </div>
         {!selectedWaypoint && <div className="map-hint">Tap a marker to view conditions or submit a report</div>}
         {selectedWaypoint && (
-          <div className="detail-overlay" role="dialog" aria-label={`${selectedWaypoint.name} details`}>
-            <div className="detail-overlay-handle" />
-            <button className="detail-close" onClick={() => setSelectedId(null)} aria-label="Close">
-              ×
-            </button>
-            <WaypointDetail waypoint={selectedWaypoint} result={selectedResult} />
-          </div>
+          <BottomSheet onClose={() => setSelectedId(null)} ariaLabel={`${selectedWaypoint.name} details`}>
+            <WaypointDetail waypoint={selectedWaypoint} result={selectedResult} weather={selectedWeather} />
+          </BottomSheet>
         )}
       </div>
     </div>

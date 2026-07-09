@@ -14,9 +14,10 @@ most notorious rockfall hazard).
 
 | Source | Status | Detail |
 |---|---|---|
-| **Weather** | **Live** | Every waypoint's lat/lng is sent to the [Open-Meteo forecast API](https://api.open-meteo.com/v1/forecast) (no key required) for current precipitation, wind speed, and temperature. Refetched every 5 minutes. |
+| **Weather** | **Live** | Every waypoint's lat/lng (and true elevation) is sent to the [Open-Meteo forecast API](https://api.open-meteo.com/v1/forecast) (no key required) for current temperature, precipitation, snowfall, and both sustained wind and gusts. The `elevation` parameter is set explicitly per waypoint so Open-Meteo lapse-rate-corrects temperature to the real altitude — without it, a high alpine refuge can read many degrees warmer than reality because the model's grid cell defaults to a coarser, lower average elevation. Refetched every 5 minutes. |
+| **Avalanche risk indicator** | **Derived from live data, not an official bulletin** | `src/lib/avalancheRisk.ts` computes a low/moderate/high estimate from the *same* live Open-Meteo call (recent snowfall + wind gusts + freeze-thaw temperature) — a transparent heuristic, not a feed from avalanche.org or any real avalanche center. Labeled as such in the UI. |
 | **Crowd hazard reports** | **Seeded + live client-side** | Ships with 6-8 mock reports (`src/data/seedReports.ts`) with staggered timestamps so every decay tier is visible on load. The in-app report form adds *real* new reports to this pool immediately (persisted to `localStorage`), which is what makes the reconciliation engine live-updating — but there is no shared backend, so submissions are local to your browser, not a real multi-user crowd-sourcing system. |
-| **Ranger / terrain advisory** | **Seeded, illustrative only** | 4 mock advisories (`src/data/seedAdvisories.ts`) simulating a park-ranger or avalanche-center bulletin. This is **not** a real integration with any ranger service, avalanche.org, or similar — it exists to demonstrate a third, higher-trust source type in the reconciliation math. |
+| **Ranger / guide-office advisory** | **Seeded, illustrative only** | 4 mock advisories (`src/data/seedAdvisories.ts`) simulating a bulletin from a body like the Compagnie des Guides. This is **not** a real integration with any guide service, avalanche.org, or similar — it exists to demonstrate a third, higher-trust source type in the reconciliation math. |
 
 We're calling this out explicitly because overclaiming a live integration we
 don't have would be worse than being upfront about scope.
@@ -83,10 +84,13 @@ npm test         # runs the reconciliation engine's unit tests
 
 ## Out of scope (v2 roadmap)
 
-- Live integration with avalanche.org, NASA FIRMS, or a real park-ranger feed
+- Live integration with avalanche.org, NASA FIRMS, or a real guide/ranger feed
+  (the in-app "avalanche risk" indicator is our own heuristic over live
+  weather data, not a substitute for this)
 - Offline / dead-zone last-known-position capture
 - Authentication
 - Real crowd-sourcing at scale (a shared backend, moderation, spam handling)
+- More granular waypoints than the current 7 checkpoints (see below)
 
 These are intentionally not attempted here — the point of this build is the
 reconciliation logic across genuinely different, real source types, not a

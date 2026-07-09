@@ -143,8 +143,25 @@ textarea {
   background: var(--surface-1);
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
-  padding: 10px 48px 20px 16px;
+  padding: 0 16px 20px;
   border-top: 1px solid var(--border);
+}
+
+.detail-overlay-handle-zone {
+  position: sticky;
+  top: 0;
+  background: var(--surface-1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 6px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.detail-overlay-handle-zone:active {
+  cursor: grabbing;
 }
 
 .detail-overlay-handle {
@@ -152,29 +169,12 @@ textarea {
   height: 4px;
   border-radius: 2px;
   background: var(--gridline);
-  margin: 2px auto 10px;
 }
 
-.detail-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface-1);
-  color: var(--text-primary);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.detail-close:hover {
-  background: var(--gridline);
+.swipe-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
 }
 
 @media (min-width: 720px) {
@@ -186,10 +186,6 @@ textarea {
     width: 380px;
     max-height: none;
     border-radius: 12px;
-  }
-
-  .detail-overlay-handle {
-    display: none;
   }
 }
 
@@ -219,6 +215,130 @@ textarea {
 .status-banner .status-label {
   font-weight: 600;
   font-size: 14px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.status-row .status-banner {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.confidence-pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-bottom: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 10px 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: var(--series-1);
+  border-bottom-color: var(--series-1);
+}
+
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0 6px;
+}
+
+@media (max-width: 420px) {
+  .metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.metric-col {
+  background: var(--page-plane);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-transform: capitalize;
+}
+
+.metric-value.risk-low {
+  color: #0ca30c;
+}
+
+.metric-value.risk-moderate {
+  color: #fab219;
+}
+
+.metric-value.risk-high {
+  color: #d03b3b;
+}
+
+.metric-value.risk-unavailable {
+  color: var(--text-muted);
+}
+
+.metric-sub {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.metrics-caption {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0 0 14px;
+}
+
+.sources-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 4px 0 8px;
+  color: var(--series-1);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  display: block;
 }
 
 .why-text {

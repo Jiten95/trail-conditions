@@ -31,7 +31,7 @@ const WEATHER_CORRELATED_TYPES = new Set<HazardType>(["flooding", "ice", "high-w
 
 const SEVERITY_LEVEL: Record<Severity, number> = { low: 1, medium: 2, high: 3 };
 
-const TYPE_LABEL: Record<HazardType, string> = {
+export const TYPE_LABEL: Record<HazardType, string> = {
   flooding: "flooding",
   rockfall: "rockfall",
   ice: "ice",
@@ -62,15 +62,25 @@ export function ageInHours(timestamp: string, now: Date): number {
 /** Maps a live weather reading onto the same 0-3 hazard scale as reports. */
 export function weatherHazardLevel(w: WeatherReading): number {
   const precipLevel = w.precipitationMmHr < 1 ? 0 : w.precipitationMmHr < 4 ? 1 : w.precipitationMmHr < 8 ? 2 : 3;
-  const windLevel = w.windSpeedKph < 30 ? 0 : w.windSpeedKph < 50 ? 1 : w.windSpeedKph < 70 ? 2 : 3;
+  // Gusts are what actually knock someone off a ridge, so hazard is judged
+  // against whichever of sustained wind or gusts is higher.
+  const effectiveWind = Math.max(w.windSpeedKph, w.windGustsKph);
+  const windLevel = effectiveWind < 30 ? 0 : effectiveWind < 50 ? 1 : effectiveWind < 70 ? 2 : 3;
   const iceBump = w.temperatureC <= 1 && w.precipitationMmHr > 0 ? 1 : 0;
   return Math.min(3, Math.max(precipLevel, windLevel) + iceBump);
 }
 
 function weatherDescription(w: WeatherReading): string {
   const parts: string[] = [];
-  if (w.precipitationMmHr >= 0.5) parts.push(`${w.precipitationMmHr.toFixed(1)}mm/h precipitation`);
-  if (w.windSpeedKph >= 20) parts.push(`${w.windSpeedKph.toFixed(0)}kph wind`);
+  if (w.snowfallCm >= 0.1) parts.push(`${w.snowfallCm.toFixed(1)}cm/h snowfall`);
+  else if (w.precipitationMmHr >= 0.1) parts.push(`${w.precipitationMmHr.toFixed(1)}mm/h precipitation`);
+  if (w.windSpeedKph >= 15 || w.windGustsKph >= 25) {
+    parts.push(
+      w.windGustsKph > w.windSpeedKph + 5
+        ? `${w.windSpeedKph.toFixed(0)}kph wind (gusts ${w.windGustsKph.toFixed(0)}kph)`
+        : `${w.windSpeedKph.toFixed(0)}kph wind`,
+    );
+  }
   if (w.temperatureC <= 1) parts.push(`${w.temperatureC.toFixed(0)}°C`);
   if (parts.length === 0) return `${w.temperatureC.toFixed(0)}°C, no significant precipitation or wind`;
   return parts.join(" + ");
@@ -96,6 +106,8 @@ function reportContribution(
     decayFactor: decay,
     effectiveWeight: baseWeight * decay,
     ageHours: age,
+    hazardType: report.type,
+    severity: report.severity,
   };
 }
 

@@ -10,8 +10,13 @@ function clearWeather(): WeatherReading {
     fetchedAt: NOW.toISOString(),
     temperatureC: 20,
     precipitationMmHr: 0,
+    rainMmHr: 0,
+    showersMmHr: 0,
+    snowfallCm: 0,
     windSpeedKph: 10,
+    windGustsKph: 15,
     weatherCode: 0,
+    recentSnowfallCm: 0,
     source: "weather",
   };
 }
@@ -22,8 +27,13 @@ function stormyWeather(): WeatherReading {
     fetchedAt: NOW.toISOString(),
     temperatureC: 12,
     precipitationMmHr: 12,
+    rainMmHr: 12,
+    showersMmHr: 0,
+    snowfallCm: 0,
     windSpeedKph: 20,
+    windGustsKph: 35,
     weatherCode: 65,
+    recentSnowfallCm: 0,
     source: "weather",
   };
 }
