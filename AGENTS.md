@@ -52,11 +52,13 @@ out-of-scope items — don't duplicate that here, read it there.
  fallback per leg (and validation that rejects implausible detours). Cached
  in `localStorage`. **Verified rendering** — the Swiss trail draws as a real
  winding path, not straight lines.
-- `src/data/route.ts` — the 7 named waypoints for the one hardcoded route
- (Schynige Platte → First). `ROUTES` is a stub array for a future route
- picker, not a real multi-route system yet — don't build more
- route-switching machinery than the UI currently exposes without being
- asked.
+- `src/data/route.ts` — two routes as `Route` objects in `ROUTES` (each with
+ its own 7 waypoints and per-route waypoint ids: `sp-*` for the default
+ Schynige Platte → First, `mb-*` for the backup Gouter Route). The header's
+ route picker switches the active route; `DEFAULT_ROUTE_ID` is the first
+ entry. Seed reports/advisories are keyed to these per-route ids so each
+ route shows its own hazards. Keep it to these two curated routes — don't
+ add a route-authoring/import system without being asked.
 - `src/data/seedReports.ts` / `seedAdvisories.ts` — seeded/mock crowd +
   ranger data with staggered timestamps so every decay tier is visible on
   load.

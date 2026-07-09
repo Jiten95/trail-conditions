@@ -4,3 +4,5 @@ dist
 *.local
 *.tsbuildinfo
 trail-screenshot.png
+route-*.png
+verify-*.mjs

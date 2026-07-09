@@ -5,13 +5,18 @@ signal (live weather, crowd-submitted reports, and a ranger/advisory feed),
 combined into a single, explainable status per waypoint — with a visible
 confidence score and a one-line "why," never a black box.
 
-Route used for the demo: **Schynige Platte → First (Bernese Oberland,
-Switzerland)** — one of the region's classic high-alpine day hikes (7
-waypoints: Schynige Platte, Oberberghorn, Berghaus Männdlenen, Faulhorn,
-Bachalpsee, Bachläger, First). It replaced Mont Blanc's Gouter Route because
-its trails are fully routable (so the map draws the *real* trail path, not a
-straight line) and it sits inside an official avalanche-bulletin region
-(SLF), which the glaciated Gouter Route did not usefully support.
+Default route: **Schynige Platte → First (Bernese Oberland, Switzerland)** —
+one of the region's classic high-alpine day hikes (7 waypoints: Schynige
+Platte, Oberberghorn, Berghaus Männdlenen, Faulhorn, Bachalpsee, Bachläger,
+First). It's the main route because its trails are fully routable (so the map
+draws the *real* trail path, not a straight line) and it sits inside an
+official avalanche-bulletin region (SLF).
+
+A second route — **Gouter Route (Voie Normale), Mont Blanc, France** — is kept
+as a selectable backup via the picker in the header. It's a good stress test
+of graceful degradation: its upper glaciated legs aren't routable (so those
+segments fall back to straight lines) and it's outside the SLF region (so the
+avalanche card always uses the weather-derived heuristic there).
 
 ## What's live vs. seeded — please read this before judging
 
