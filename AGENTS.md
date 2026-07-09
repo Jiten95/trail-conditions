@@ -7,12 +7,14 @@ look for automatically.)
 ## What this is
 
 Trail Conditions — a hazard-reconciliation engine for hikers, built around
-Mont Blanc's Gouter Route (Voie Normale). One route, three kinds of signal
-(live weather, crowd-submitted reports, ranger/guide advisories) combined
-into a single, explainable status per waypoint with a visible confidence
-score and a one-line "why." See `README.md` for the full pitch, the
-live-vs-seeded data source table, and out-of-scope items — don't duplicate
-that here, read it there.
+the Schynige Platte → First day hike in the Bernese Oberland, Switzerland
+(this replaced Mont Blanc's Gouter Route: the Swiss trail is fully routable
+so the map draws the real path, and it sits in an official SLF avalanche
+region). One route, three kinds of signal (live weather, crowd-submitted
+reports, ranger/trail-office advisories) combined into a single, explainable
+status per waypoint with a visible confidence score and a one-line "why."
+See `README.md` for the full pitch, the live-vs-seeded data source table, and
+out-of-scope items — don't duplicate that here, read it there.
 
 ## Stack
 
@@ -32,19 +34,29 @@ that here, read it there.
   touching anything status/verdict-related — it's intentionally kept free
   of fetching/UI code so it stays auditable.
 - `src/lib/weather.ts` — live Open-Meteo fetch, elevation-corrected per
-  waypoint (mountain terrain needs a real elevation or temperature reads
-  wrong by several degrees).
-- `src/lib/avalancheRisk.ts` — a derived heuristic from live weather data.
-  **Not** an official avalanche bulletin — keep it labeled as such anywhere
-  it surfaces in the UI.
-- `src/lib/routeGeometry.ts` — fetches/stitches real trail geometry from OSM
-  Overpass per leg between named waypoints, with a straight-line fallback
-  per leg if the live data doesn't stitch cleanly. **Unverified visually as
-  of this handover** — see Known Issues.
-- `src/data/route.ts` — the 7 named waypoints for the one hardcoded route.
-  `ROUTES` is a stub array for a future route picker, not a real multi-route
-  system yet — don't build more route-switching machinery than the UI
-  currently exposes without being asked.
+ waypoint (mountain terrain needs a real elevation or temperature reads
+ wrong by several degrees). Also pulls today's sunrise/sunset + daylight
+ duration.
+- `src/lib/daylight.ts` — pure, timezone-safe helpers that turn the
+ Open-Meteo sun times into a "daylight left" readout. Unit-tested.
+- `src/lib/avalancheRisk.ts` — the weather-derived heuristic (low/moderate/
+ high). **Not** an official bulletin — the UI only shows it when no live SLF
+ bulletin is available; keep it labeled as an estimate.
+- `src/lib/slfAvalanche.ts` — the **live** official avalanche source: fetches
+ SLF's public EAWS GeoJSON and matches a waypoint to a danger rating by
+ point-in-polygon. Seasonal (empty in summer) → returns null and the UI
+ falls back to the heuristic. Pure parsing is unit-tested against mock
+ winter data; the network path degrades gracefully.
+- `src/lib/routeGeometry.ts` — routes real trail geometry with BRouter's
+ hiking profile per leg between named waypoints, with a straight-line
+ fallback per leg (and validation that rejects implausible detours). Cached
+ in `localStorage`. **Verified rendering** — the Swiss trail draws as a real
+ winding path, not straight lines.
+- `src/data/route.ts` — the 7 named waypoints for the one hardcoded route
+ (Schynige Platte → First). `ROUTES` is a stub array for a future route
+ picker, not a real multi-route system yet — don't build more
+ route-switching machinery than the UI currently exposes without being
+ asked.
 - `src/data/seedReports.ts` / `seedAdvisories.ts` — seeded/mock crowd +
   ranger data with staggered timestamps so every decay tier is visible on
   load.
@@ -74,29 +86,30 @@ that here, read it there.
 
 ## Known issues / unverified
 
-- **No Node.js/npm was available in the environment this was built in.**
-  Everything was written and hand-reviewed without ever running
-  `npm install`, the dev server, or the test suite. If you have a working
-  Node environment, run `npm install && npm test && npm run dev` first and
-  fix whatever that surfaces before trusting anything else below.
-- `src/lib/routeGeometry.ts` (the real OSM trail path) hasn't been visually
-  confirmed in a browser. It has defensive fallbacks so it shouldn't ever
-  render worse than a straight line, but whether the stitched path is
-  genuinely accurate per leg needs an actual look at the map.
-- The public Overpass API instance can be slow or rate-limited. There's a
-  9s per-leg timeout and a `localStorage` cache after first success, but
-  expect possible slowness on a first load / fresh incognito session.
+- The build has now been run in a real Node environment: `npm install`,
+ `npm test` (36 tests pass), `tsc`/`npm run build`, and `npm run dev` all
+ succeed. The trail path was also confirmed rendering in a headless browser.
+- BRouter's public instance can be slow or rate-limited. There's a 9s
+ per-leg timeout and a `localStorage` cache after first success, but expect
+ possible slowness on a first load / fresh incognito session. A route with
+ an implausible detour is rejected and falls back to a straight leg.
+- SLF avalanche is seasonal: in summer the bulletin is empty, so the
+ avalanche card shows the labeled heuristic. The official-bulletin parsing
+ is unit-tested against mock winter data but the *live* winter path can't be
+ exercised out of season — it's written defensively (any parse failure
+ degrades to the heuristic).
 
 ## Pending work (not started yet)
 
-- 1km-spaced checkpoints along the real trail — blocked on confirming the
-  real path (above) first, since checkpoint spacing depends on true
-  distance.
+The real trail path is now confirmed, which unblocks all three of these:
+
+- 1km-spaced checkpoints along the real trail (spacing depends on true
+ routed distance, now available from `routeGeometry.ts`).
 - Tap-anywhere-on-the-route hazard reporting, with marker clustering so the
-  map doesn't get crowded with report pins.
+ map doesn't get crowded with report pins.
 - Tap-to-inspect on the interpolated status between checkpoints (today only
-  the 7 named waypoints are inspectable; the line between them isn't
-  interactive).
+ the 7 named waypoints are inspectable; the line between them isn't
+ interactive).
 
 ## Running it
 
