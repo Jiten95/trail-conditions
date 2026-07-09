@@ -1,21 +1,25 @@
 import type { Waypoint } from "../types";
 
-// Approximate waypoints along the Gouter Route (Voie Normale) up Mont Blanc —
-// the mountain's standard and most-climbed ascent line. Coordinates are
-// illustrative (traced from the route's general path), not surveyed GPS
-// data — see README for scope notes.
-export const ROUTE_NAME = "Gouter Route (Voie Normale), Mont Blanc";
+// The Schynige Platte → First panorama trail (the "Faulhornweg"), one of the
+// classic Bernese Oberland ridge hikes above Grindelwald/Interlaken. Runs the
+// ridge from the Schynige Platte cog-railway station, past the Oberberghorn
+// viewpoint and Berghaus Männdlenen, over the Faulhorn, down to the Bachalpsee
+// and out at Grindelwald First. Coordinates/elevations are approximate
+// (traced from the route's general path), not surveyed GPS — see README.
+export const ROUTE_NAME = "Schynige Platte → First (Faulhornweg), Bernese Oberland";
 
 // Only one route is wired up today; this list exists so the UI can offer a
 // route picker without pretending multi-route support is built yet.
-export const ROUTES: { id: string; name: string }[] = [{ id: "gouter", name: ROUTE_NAME }];
+export const ROUTES: { id: string; name: string }[] = [{ id: "faulhornweg", name: ROUTE_NAME }];
 
+// slfRegionId values were resolved from the SLF warning-region sector API
+// (aws.slf.ch/api/warningregion/sector/findByLocWGS84) for each waypoint's
+// coordinates, and are what the official avalanche bulletin is keyed on.
 export const waypoints: Waypoint[] = [
-  { id: "wp-1", name: "Les Houches Trailhead", order: 1, lat: 45.8917, lng: 6.7997, elevationM: 1008 },
-  { id: "wp-2", name: "Bellevue Cable Car Station", order: 2, lat: 45.908, lng: 6.7735, elevationM: 1801 },
-  { id: "wp-3", name: "Refuge de Tete Rousse", order: 3, lat: 45.8567, lng: 6.8386, elevationM: 3167 },
-  { id: "wp-4", name: "Grand Couloir Crossing", order: 4, lat: 45.8574, lng: 6.8432, elevationM: 3300 },
-  { id: "wp-5", name: "Refuge du Gouter", order: 5, lat: 45.8581, lng: 6.8478, elevationM: 3835 },
-  { id: "wp-6", name: "Dome du Gouter", order: 6, lat: 45.8558, lng: 6.858, elevationM: 4304 },
-  { id: "wp-7", name: "Mont Blanc Summit", order: 7, lat: 45.8326, lng: 6.8652, elevationM: 4808 },
+  { id: "wp-1", name: "Schynige Platte", order: 1, lat: 46.6558, lng: 7.9068, elevationM: 1967, slfRegionId: "CH-1233" },
+  { id: "wp-2", name: "Oberberghorn Viewpoint", order: 2, lat: 46.6606, lng: 7.9155, elevationM: 2069, slfRegionId: "CH-1241" },
+  { id: "wp-3", name: "Berghaus Männdlenen", order: 3, lat: 46.6636, lng: 7.9508, elevationM: 2344, slfRegionId: "CH-1242" },
+  { id: "wp-4", name: "Faulhorn", order: 4, lat: 46.6708, lng: 8.0258, elevationM: 2681, slfRegionId: "CH-1242" },
+  { id: "wp-5", name: "Bachalpsee", order: 5, lat: 46.6646, lng: 8.03, elevationM: 2265, slfRegionId: "CH-1242" },
+  { id: "wp-6", name: "Grindelwald First", order: 6, lat: 46.6588, lng: 8.054, elevationM: 2168, slfRegionId: "CH-1242" },
 ];
