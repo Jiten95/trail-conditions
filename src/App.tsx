@@ -8,8 +8,9 @@ import { seedRangerAdvisories } from "./data/seedAdvisories";
 import { useWeather } from "./hooks/useWeather";
 import { useTrailGeometry } from "./hooks/useTrailGeometry";
 import { useAvalanche } from "./hooks/useAvalanche";
-import { reconcileWaypoint } from "./lib/reconcile";
-import type { ReconciledWaypoint } from "./types";
+import { usePointConditions } from "./hooks/usePointConditions";
+import { conditionsSeverityFor } from "./lib/conditions";
+import type { ConditionsSeverity, GeoPoint } from "./types";
 
 const pad = (n: number) => n.toString().padStart(2, "0");
 
@@ -22,6 +23,9 @@ function formatLastUpdated(d: Date): string {
 function AppContent() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
+  const [droppedPoint, setDroppedPoint] = useState<GeoPoint | null>(null);
+  const [hourOffset, setHourOffset] = useState(0);
+
   const activeRoute = getRoute(routeId);
   const waypoints = activeRoute.waypoints;
   const weatherState = useWeather(waypoints);
@@ -31,35 +35,52 @@ function AppContent() {
 
   function handleRouteChange(id: string) {
     setSelectedId(null);
+    setDroppedPoint(null);
     setRouteId(id);
   }
 
-  const reconciled = useMemo(() => {
-    const map = new Map<string, ReconciledWaypoint>();
-    const now = new Date();
+  function handleSelect(id: string) {
+    setHourOffset(0);
+    setSelectedId(id);
+  }
+
+  function handleMapClick(lat: number, lng: number) {
+    const point: GeoPoint = { id: `pin-${Date.now()}`, name: "Dropped point", lat, lng };
+    setDroppedPoint(point);
+    setHourOffset(0);
+    setSelectedId(point.id);
+  }
+
+  // Marker severity for the sample-objective waypoints (weather + avalanche only).
+  const severityById = useMemo(() => {
+    const map = new Map<string, ConditionsSeverity>();
     for (const wp of waypoints) {
       const weather = weatherState.readings.get(wp.id);
       if (!weather) continue;
-      map.set(wp.id, reconcileWaypoint(wp.id, weather, reports, seedRangerAdvisories, now));
+      map.set(wp.id, conditionsSeverityFor(weather, avalanche.official.get(wp.id)?.level));
     }
     return map;
-  }, [weatherState.readings, reports, waypoints]);
+  }, [weatherState.readings, avalanche.official, waypoints]);
 
-  const selectedWaypoint = waypoints.find((w) => w.id === selectedId) ?? null;
-  const selectedResult = selectedId ? (reconciled.get(selectedId) ?? null) : null;
-  const selectedWeather = selectedId ? (weatherState.readings.get(selectedId) ?? null) : null;
-  const selectedAvalanche = selectedId ? (avalanche.official.get(selectedId) ?? null) : null;
+  const sampleWaypoint = waypoints.find((w) => w.id === selectedId) ?? null;
+  const selectedPoint: GeoPoint | null =
+    sampleWaypoint ?? (droppedPoint && droppedPoint.id === selectedId ? droppedPoint : null);
+
+  const point = usePointConditions(selectedPoint, hourOffset, reports, seedRangerAdvisories);
+
+  const droppedSeverity: ConditionsSeverity =
+    droppedPoint && droppedPoint.id === selectedId ? (point.conditions?.conditionsSeverity ?? "unknown") : "unknown";
 
   return (
     <div className="app">
       <header className="app-header">
         <div>
-          <h1>Trail Conditions</h1>
+          <h1>Alpine Conditions</h1>
           <div className="subtitle">
             <span className="route-select-wrap">
               <select
                 className="route-select"
-                aria-label="Select route"
+                aria-label="Select sample objective"
                 value={routeId}
                 onChange={(e) => handleRouteChange(e.target.value)}
               >
@@ -86,20 +107,34 @@ function AppContent() {
             key={activeRoute.id}
             waypoints={waypoints}
             path={trail.path}
-            reconciled={reconciled}
+            severityById={severityById}
             selectedId={selectedId}
-            onSelect={setSelectedId}
+            onSelect={handleSelect}
+            droppedPoint={droppedPoint}
+            droppedSeverity={droppedSeverity}
+            onMapClick={handleMapClick}
           />
         </div>
-        {!selectedWaypoint && <div className="map-hint">Tap a marker to view conditions or submit a report</div>}
-        {selectedWaypoint && (
-          <BottomSheet onClose={() => setSelectedId(null)} ariaLabel={`${selectedWaypoint.name} details`}>
+        {!selectedPoint && (
+          <div className="map-hint">Tap a waypoint, or tap anywhere on the map to inspect that point</div>
+        )}
+        {selectedPoint && (
+          <BottomSheet
+            onClose={() => setSelectedId(null)}
+            ariaLabel={`${selectedPoint.name} details`}
+          >
             <WaypointDetail
-              waypoint={selectedWaypoint}
-              routeWaypoints={waypoints}
-              result={selectedResult}
-              weather={selectedWeather}
-              avalancheOfficial={selectedAvalanche}
+              point={selectedPoint}
+              isSample={Boolean(sampleWaypoint)}
+              order={sampleWaypoint?.order}
+              totalWaypoints={waypoints.length}
+              conditions={point.conditions}
+              weather={point.weather}
+              sun={point.sun}
+              loading={point.loading}
+              error={point.error}
+              hourOffset={hourOffset}
+              onHourOffsetChange={setHourOffset}
             />
           </BottomSheet>
         )}

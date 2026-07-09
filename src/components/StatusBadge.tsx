@@ -1,8 +1,8 @@
-import type { ReconciledStatus } from "../types";
-import { STATUS_META } from "../lib/statusMeta";
+import type { ConditionsSeverity } from "../types";
+import { SEVERITY_META } from "../lib/statusMeta";
 
-export function StatusBadge({ status }: { status: ReconciledStatus }) {
-  const meta = STATUS_META[status];
+export function StatusBadge({ severity }: { severity: ConditionsSeverity }) {
+  const meta = SEVERITY_META[severity];
   return (
     <div className="status-banner">
       <span className="dot" style={{ background: meta.color }}>

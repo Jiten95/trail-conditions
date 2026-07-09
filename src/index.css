@@ -232,13 +232,238 @@ textarea {
   margin-bottom: 0;
 }
 
-.confidence-pill {
+.verdict-disclaimer {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  background: var(--page-plane);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 4px 0 12px;
+}
+
+.time-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 4px 0 10px;
+}
+
+.time-control-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.time-chip {
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 3px 10px;
   font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.time-chip.active {
+  background: var(--series-1);
+  border-color: var(--series-1);
+  color: #ffffff;
+}
+
+.sun-timeline {
+  background: var(--page-plane);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 0 0 14px;
+}
+
+.sun-timeline-title {
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.sun-timeline-bars {
+  display: flex;
+  gap: 1px;
+  height: 20px;
+}
+
+.sun-cell {
+  flex: 1;
+  border-radius: 1px;
+}
+
+.sun-cell.lit {
+  background: #f4b93b;
+}
+
+.sun-cell.shade {
+  background: #8aa0b8;
+}
+
+.sun-cell.night {
+  background: var(--gridline);
+}
+
+.sun-timeline-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  margin-top: 3px;
+}
+
+.sun-timeline-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.sun-timeline-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sun-timeline-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.sun-timeline-legend i.lit {
+  background: #f4b93b;
+}
+
+.sun-timeline-legend i.shade {
+  background: #8aa0b8;
+}
+
+.sun-timeline-legend i.night {
+  background: var(--gridline);
+}
+
+.signals-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 14px 0 6px;
+}
+
+.signals-list {
+  border-top: 1px solid var(--border);
+}
+
+.signal-row {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 2px;
+}
+
+.signal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.signal-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.prov-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid transparent;
   white-space: nowrap;
-  margin-bottom: 12px;
+}
+
+.prov-official {
+  background: rgba(42, 120, 214, 0.14);
+  color: #2a78d6;
+  border-color: rgba(42, 120, 214, 0.4);
+}
+
+.prov-modeled {
+  background: rgba(120, 120, 120, 0.14);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.prov-computed {
+  background: rgba(12, 163, 12, 0.12);
+  color: #0ca30c;
+  border-color: rgba(12, 163, 12, 0.4);
+}
+
+.prov-reported {
+  background: rgba(250, 178, 25, 0.16);
+  color: #b9791a;
+  border-color: rgba(250, 178, 25, 0.5);
+}
+
+.signal-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-top: 3px;
+}
+
+.signal-value a {
+  color: var(--series-1);
+  text-decoration: none;
+}
+
+.signal-value a:hover {
+  text-decoration: underline;
+}
+
+.signal-meaning {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+.signal-note {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: 5px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+}
+
+.signal-fresh {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.signal-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
 }
 
 .tabs {
