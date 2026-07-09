@@ -5,6 +5,7 @@ export interface Waypoint {
   lat: number;
   lng: number;
   elevationM: number;
+  slfRegionId?: string; // SLF avalanche warning region (e.g. "CH-1242"), for the official bulletin lookup
 }
 
 export type HazardType =
