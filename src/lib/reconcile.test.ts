@@ -17,6 +17,10 @@ function clearWeather(): WeatherReading {
     windGustsKph: 15,
     weatherCode: 0,
     recentSnowfallCm: 0,
+    sunrise: null,
+    sunset: null,
+    daylightSeconds: null,
+    localTime: null,
     source: "weather",
   };
 }
@@ -34,6 +38,10 @@ function stormyWeather(): WeatherReading {
     windGustsKph: 35,
     weatherCode: 65,
     recentSnowfallCm: 0,
+    sunrise: null,
+    sunset: null,
+    daylightSeconds: null,
+    localTime: null,
     source: "weather",
   };
 }

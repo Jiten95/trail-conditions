@@ -51,6 +51,10 @@ export interface WeatherReading {
   windGustsKph: number;
   weatherCode: number;
   recentSnowfallCm: number; // sum of yesterday + today's forecasted snowfall
+  sunrise: string | null; // ISO local time of today's sunrise
+  sunset: string | null; // ISO local time of today's sunset
+  daylightSeconds: number | null; // total daylight duration for today
+  localTime: string | null; // current time in the waypoint's local timezone
   source: "weather";
 }
 
