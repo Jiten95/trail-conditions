@@ -1,9 +1,15 @@
-export interface Waypoint {
+// A bare geographic point. Sample-objective waypoints extend this; arbitrary
+// dropped pins are just a GeoPoint (elevation filled in once terrain resolves).
+export interface GeoPoint {
   id: string;
   name: string;
-  order: number;
   lat: number;
   lng: number;
+  elevationM?: number;
+}
+
+export interface Waypoint extends GeoPoint {
+  order: number;
   elevationM: number;
 }
 
@@ -49,36 +55,76 @@ export interface WeatherReading {
   snowfallCm: number; // current instantaneous snowfall rate
   windSpeedKph: number;
   windGustsKph: number;
+  windDirectionDeg: number; // 0-360, direction the wind blows FROM
   weatherCode: number;
   recentSnowfallCm: number; // sum of yesterday + today's forecasted snowfall
   sunrise: string | null; // ISO local time of today's sunrise
   sunset: string | null; // ISO local time of today's sunset
   daylightSeconds: number | null; // total daylight duration for today
   localTime: string | null; // current time in the waypoint's local timezone
+  utcOffsetSeconds: number; // waypoint's local UTC offset, for astronomy math
   source: "weather";
 }
 
-export type ReconciledStatus = "clear" | "caution" | "hazard" | "unconfirmed";
-
-export interface SourceContribution {
-  source: "weather" | "crowd" | "ranger";
-  label: string;
-  detail: string;
-  hazardLevel: number; // 0-3
-  baseWeight: number; // confidence weight before decay
-  decayFactor: number; // 0-1
-  effectiveWeight: number; // baseWeight * decayFactor
-  ageHours?: number;
-  hazardType?: HazardType; // set for crowd/ranger contributions
-  severity?: Severity; // set for crowd/ranger contributions
-  note?: string; // the original report's free text (crowd note / ranger message)
+/**
+ * Hourly series for a point (past 24h + rest of today), used for the
+ * deterministic Tier-B derivations: freeze-thaw history from air temperature,
+ * and the sun-on-slope timeline through the day. All timestamps are the
+ * waypoint's local naive wall-clock ("YYYY-MM-DDThh:mm").
+ */
+export interface HourlySeries {
+  times: string[];
+  temperatureC: number[];
+  windDirectionDeg: number[];
+  utcOffsetSeconds: number;
 }
 
-export interface ReconciledWaypoint {
-  waypointId: string;
-  status: ReconciledStatus;
-  confidence: number; // 0-100
-  why: string;
-  contributions: SourceContribution[];
-  conflicting: boolean;
+/**
+ * How a fact was obtained — this replaces the old blended confidence score.
+ * We never assert a safe/unsafe verdict, so instead every fact is honestly
+ * tagged with where it came from, and the user judges.
+ *  - official: a real published authority feed (e.g. SLF avalanche bulletin)
+ *  - modeled: numerical weather model output (Open-Meteo) or derived from it
+ *  - computed: deterministic math on terrain (DEM) or astronomy (sun position)
+ *  - reported: a human observation (crowd report or ranger advisory)
+ */
+export type Provenance = "official" | "modeled" | "computed" | "reported";
+
+export type SignalKind =
+  | "weather"
+  | "wind"
+  | "avalanche"
+  | "slope"
+  | "aspect"
+  | "sun"
+  | "freeze-thaw"
+  | "wind-loading"
+  | "daylight"
+  | "observation";
+
+/**
+ * Factual conditions severity for the map marker ONLY. This describes the
+ * current weather/avalanche state, it is NOT a go/no-go or trail-safety
+ * verdict — the app never tells you whether to proceed.
+ */
+export type ConditionsSeverity = "calm" | "elevated" | "severe" | "unknown";
+
+export interface Signal {
+  kind: SignalKind;
+  label: string;
+  value: string;
+  provenance: Provenance;
+  observedAt: string | null; // ISO, when the underlying reading/observation is from
+  freshness: string; // human-readable freshness ("model run, live", "3h ago", "computed")
+  meaning?: string; // neutral "what this means" — never a verdict
+  note?: string; // free text for a reported observation
+  link?: string; // external provider link, when there is a real one
+  // Only weather/avalanche signals set this; it feeds the marker severity.
+  severityHint?: ConditionsSeverity;
+}
+
+export interface PointConditions {
+  pointId: string;
+  conditionsSeverity: ConditionsSeverity;
+  signals: Signal[];
 }
