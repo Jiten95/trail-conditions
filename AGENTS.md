@@ -49,7 +49,12 @@ that here, read it there.
   ranger data with staggered timestamps so every decay tier is visible on
   load.
 - `src/state/reportsStore.tsx` — React context for crowd reports (seeded +
-  user-submitted, persisted to `localStorage`, no backend).
+ user-submitted). Writes/reads a shared Supabase table when
+ `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` are set, and degrades to
+ `localStorage` when they aren't or the backend is unreachable.
+- `src/lib/supabase.ts` — Supabase client + `reports` table fetch/insert
+ helpers. `isSupabaseConfigured` gates every backend call so the app still
+ runs with no env vars. SQL schema lives in `supabase/schema.sql`.
 - `src/components/` — `MapView` (Leaflet), `WaypointDetail` (Conditions /
   Submit report tabs, 4-column metrics row, collapsible source breakdown),
   `BottomSheet` (drag-to-dismiss only — **no close button, by explicit user

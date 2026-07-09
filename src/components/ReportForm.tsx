@@ -21,7 +21,7 @@ const SEVERITY_OPTIONS: { value: Severity; label: string }[] = [
 ];
 
 export function ReportForm({ waypointId }: { waypointId: string }) {
-  const { addReport } = useReports();
+  const { addReport, backendConnected } = useReports();
   const [type, setType] = useState<HazardType>("other");
   const [severity, setSeverity] = useState<Severity>("medium");
   const [note, setNote] = useState("");
@@ -62,7 +62,13 @@ export function ReportForm({ waypointId }: { waypointId: string }) {
         <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="What did you see?" />
       </label>
       <button type="submit">Submit report</button>
-      {justSubmitted && <span className="report-success">Report added — reconciled status updated.</span>}
+      {justSubmitted && (
+        <span className="report-success">
+          {backendConnected
+            ? "Report submitted — shared and reconciled."
+            : "Report added — reconciled status updated."}
+        </span>
+      )}
     </form>
   );
 }

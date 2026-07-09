@@ -16,7 +16,7 @@ most notorious rockfall hazard).
 |---|---|---|
 | **Weather** | **Live** | Every waypoint's lat/lng (and true elevation) is sent to the [Open-Meteo forecast API](https://api.open-meteo.com/v1/forecast) (no key required) for current temperature, precipitation, snowfall, and both sustained wind and gusts. The `elevation` parameter is set explicitly per waypoint so Open-Meteo lapse-rate-corrects temperature to the real altitude — without it, a high alpine refuge can read many degrees warmer than reality because the model's grid cell defaults to a coarser, lower average elevation. Refetched every 5 minutes. |
 | **Avalanche risk indicator** | **Derived from live data, not an official bulletin** | `src/lib/avalancheRisk.ts` computes a low/moderate/high estimate from the *same* live Open-Meteo call (recent snowfall + wind gusts + freeze-thaw temperature) — a transparent heuristic, not a feed from avalanche.org or any real avalanche center. Labeled as such in the UI. |
-| **Crowd hazard reports** | **Seeded + live client-side** | Ships with 6-8 mock reports (`src/data/seedReports.ts`) with staggered timestamps so every decay tier is visible on load. The in-app report form adds *real* new reports to this pool immediately (persisted to `localStorage`), which is what makes the reconciliation engine live-updating — but there is no shared backend, so submissions are local to your browser, not a real multi-user crowd-sourcing system. |
+| **Crowd hazard reports** | **Seeded + live, optionally shared via Supabase** | Ships with 6-8 mock reports (`src/data/seedReports.ts`) with staggered timestamps so every decay tier is visible on load. The in-app report form adds *real* new reports to this pool immediately, which is what makes the reconciliation engine live-updating. If Supabase is configured (`VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` — see [Backend setup](#backend-setup-supabase)), submissions are written to and read from a shared table, so reports are genuinely multi-user across browsers. **Without those env vars set, it falls back to `localStorage`** — submissions stay in your own browser, exactly as before. There is still no auth, moderation, or spam handling (see out of scope). |
 | **Ranger / guide-office advisory** | **Seeded, illustrative only** | 4 mock advisories (`src/data/seedAdvisories.ts`) simulating a bulletin from a body like the Compagnie des Guides. This is **not** a real integration with any guide service, avalanche.org, or similar — it exists to demonstrate a third, higher-trust source type in the reconciliation math. |
 
 We're calling this out explicitly because overclaiming a live integration we
@@ -82,14 +82,44 @@ npm run dev      # starts the Vite dev server
 npm test         # runs the reconciliation engine's unit tests
 ```
 
+The app runs fully without any configuration — crowd reports fall back to
+`localStorage`. To enable the shared, multi-user report backend, see below.
+
+## Backend setup (Supabase)
+
+Crowd reports can optionally be persisted to (and read from) a shared
+[Supabase](https://supabase.com) table so submissions are visible across
+browsers/devices instead of being local to one browser.
+
+1. Create a Supabase project (free tier is fine).
+2. In the SQL Editor, run [`supabase/schema.sql`](supabase/schema.sql). It
+   creates the `reports` table and row-level-security policies allowing the
+   public anon key to read and insert reports (this app is unauthenticated).
+3. Copy `.env.example` to `.env.local` and fill in your project's URL and anon
+   key (Project Settings → API):
+
+   ```bash
+   cp .env.example .env.local
+   # then edit .env.local
+   ```
+
+4. Restart `npm run dev`. Submissions now round-trip through Supabase; if the
+   backend is ever unreachable, the app degrades to `localStorage` rather than
+   failing. Leave the env vars unset to stay in localStorage-only mode.
+
+Both values are safe to ship in a client bundle: the anon key is a public key
+gated by the row-level-security policies in the schema.
+
 ## Out of scope (v2 roadmap)
 
 - Live integration with avalanche.org, NASA FIRMS, or a real guide/ranger feed
   (the in-app "avalanche risk" indicator is our own heuristic over live
   weather data, not a substitute for this)
 - Offline / dead-zone last-known-position capture
-- Authentication
-- Real crowd-sourcing at scale (a shared backend, moderation, spam handling)
+- Authentication (the Supabase backend, when enabled, is anon-key only)
+- Crowd-sourcing hardening at scale (moderation, spam handling, rate limiting)
+  — the optional Supabase backend gives a genuine shared store, but none of
+  these guardrails
 - More granular waypoints than the current 7 checkpoints (see below)
 
 These are intentionally not attempted here — the point of this build is the
