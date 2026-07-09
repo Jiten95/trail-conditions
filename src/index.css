@@ -78,6 +78,11 @@ textarea {
   margin-top: 2px;
 }
 
+.last-updated {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .route-select-wrap {
   position: relative;
   display: inline-flex;

@@ -11,6 +11,14 @@ import { useAvalanche } from "./hooks/useAvalanche";
 import { reconcileWaypoint } from "./lib/reconcile";
 import type { ReconciledWaypoint } from "./types";
 
+const pad = (n: number) => n.toString().padStart(2, "0");
+
+function formatLastUpdated(d: Date): string {
+  const date = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return `${date} ${time}`;
+}
+
 function AppContent() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
@@ -64,6 +72,11 @@ function AppContent() {
             </span>
             {weatherState.loading && " · fetching live weather…"}
             {weatherState.error && ` · ${weatherState.error}`}
+            {!weatherState.loading && !weatherState.error && weatherState.lastFetchedAt && (
+              <span className="last-updated">
+                {" · "}Last updated {formatLastUpdated(weatherState.lastFetchedAt)}
+              </span>
+            )}
           </div>
         </div>
       </header>
