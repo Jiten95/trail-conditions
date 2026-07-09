@@ -4,6 +4,7 @@ import { StatusBadge } from "./StatusBadge";
 import { ReportForm } from "./ReportForm";
 import { TYPE_LABEL } from "../lib/reconcile";
 import { estimateAvalancheRisk } from "../lib/avalancheRisk";
+import type { OfficialAvalancheRating } from "../lib/avalancheBulletin";
 import { waypoints } from "../data/route";
 import { ThermometerIcon, WindIcon, AlertTriangleIcon, FlagIcon, ChevronIcon } from "./icons";
 
@@ -16,17 +17,28 @@ const SOURCE_LABEL: Record<string, string> = {
 const RISK_ACCENT: Record<string, string> = {
   low: "accent-good",
   moderate: "accent-warning",
+  considerable: "accent-warning",
   high: "accent-critical",
+  "very-high": "accent-critical",
   unavailable: "accent-muted",
+};
+
+const OFFICIAL_LEVEL_SLUG: Record<number, string> = {
+  1: "low",
+  2: "moderate",
+  3: "considerable",
+  4: "high",
+  5: "very-high",
 };
 
 interface WaypointDetailProps {
   waypoint: Waypoint;
   result: ReconciledWaypoint | null;
   weather: WeatherReading | null;
+  officialAvalanche: OfficialAvalancheRating | null;
 }
 
-export function WaypointDetail({ waypoint, result, weather }: WaypointDetailProps) {
+export function WaypointDetail({ waypoint, result, weather, officialAvalanche }: WaypointDetailProps) {
   const [tab, setTab] = useState<"conditions" | "report">("conditions");
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
@@ -45,7 +57,26 @@ export function WaypointDetail({ waypoint, result, weather }: WaypointDetailProp
     .filter((c) => c.source !== "weather" && c.effectiveWeight > 0)
     .sort((a, b) => b.hazardLevel * b.effectiveWeight - a.hazardLevel * a.effectiveWeight)[0];
 
-  const avalanche = weather ? estimateAvalancheRisk(weather) : null;
+  const heuristic = weather ? estimateAvalancheRisk(weather) : null;
+  const avalanche = officialAvalanche
+    ? {
+        slug: OFFICIAL_LEVEL_SLUG[officialAvalanche.level] ?? "unavailable",
+        value: officialAvalanche.levelText,
+        sub: `SLF official · ${officialAvalanche.level}/5`,
+        title: `Official SLF avalanche bulletin — danger level ${officialAvalanche.level}/5${
+          officialAvalanche.validEnd ? `, valid to ${new Date(officialAvalanche.validEnd).toLocaleString()}` : ""
+        }`,
+        official: true,
+      }
+    : heuristic
+      ? {
+          slug: heuristic.level,
+          value: heuristic.level,
+          sub: "Heuristic — no live bulletin",
+          title: heuristic.reason,
+          official: false,
+        }
+      : { slug: "unavailable", value: "—", sub: "no data", title: "", official: false };
   const hazardAccent = activeHazard && result ? `accent-status-${result.status}` : "accent-info";
 
   return (
@@ -98,16 +129,14 @@ export function WaypointDetail({ waypoint, result, weather }: WaypointDetailProp
               <div className="metric-value">{weather.windSpeedKph.toFixed(0)} kph</div>
               <div className="metric-sub">gusts {weather.windGustsKph.toFixed(0)} kph</div>
             </div>
-            <div className={`metric-col ${RISK_ACCENT[avalanche?.level ?? "unavailable"]}`}>
+            <div className={`metric-col ${RISK_ACCENT[avalanche.slug] ?? "accent-muted"}`}>
               <div className="metric-icon">
                 <AlertTriangleIcon />
               </div>
               <div className="metric-label">Avalanche risk</div>
-              <div className={`metric-value risk-${avalanche?.level ?? "unavailable"}`}>
-                {avalanche ? avalanche.level : "—"}
-              </div>
-              <div className="metric-sub" title={avalanche?.reason}>
-                heuristic est.
+              <div className={`metric-value risk-${avalanche.slug}`}>{avalanche.value}</div>
+              <div className={`metric-sub${avalanche.official ? " metric-sub-official" : ""}`} title={avalanche.title}>
+                {avalanche.sub}
               </div>
             </div>
             <div className={`metric-col ${hazardAccent}`}>
@@ -126,8 +155,9 @@ export function WaypointDetail({ waypoint, result, weather }: WaypointDetailProp
             </div>
           </div>
           <p className="metrics-caption">
-            Avalanche risk is a simplified estimate from live snowfall, wind, and temperature data — not an official
-            avalanche bulletin.
+            {avalanche.official
+              ? "Avalanche risk is the official SLF avalanche bulletin (EAWS danger scale 1–5) for this waypoint's warning region."
+              : "No live SLF bulletin right now (it's issued seasonally, ~Nov–May). Showing a simplified heuristic estimate from live snowfall, wind, and temperature — not an official avalanche bulletin."}
           </p>
 
           <p className="why-text">{result.why}</p>

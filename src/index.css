@@ -383,12 +383,25 @@ textarea {
   color: #fab219;
 }
 
+.metric-value.risk-considerable {
+  color: #f08a24;
+}
+
 .metric-value.risk-high {
   color: #d03b3b;
 }
 
+.metric-value.risk-very-high {
+  color: #7a1717;
+}
+
 .metric-value.risk-unavailable {
   color: var(--text-muted);
+}
+
+.metric-sub-official {
+  color: #0ca30c;
+  font-weight: 600;
 }
 
 .metric-sub {
